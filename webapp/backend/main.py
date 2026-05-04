@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 import os
 
-from backend.core.lifespan import lifespan
+from backend.core.lifespan import lifespan, is_ready
 from backend.routers import chat, dashboard, segments, ltv, risk, marketing
 from backend.routers.auth import decode_token
 import backend.routers.auth as auth_router
@@ -46,7 +46,7 @@ app.include_router(marketing.router, prefix="/api/marketing", tags=["marketing"]
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "ready": is_ready()}
 
 
 @app.get("/")

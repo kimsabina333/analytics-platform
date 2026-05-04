@@ -181,17 +181,37 @@ def _load_all_services():
     return pred_svc_first, pred_svc_recur, ai_svc_first, ai_svc_recur, ltv_svc, ai_svc_ltv, risk_svc, ai_svc_risk, marketing_svc, ai_svc_marketing
 
 
+_startup_done = False
+
+def is_ready() -> bool:
+    return _startup_done
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _prediction_service_first, _prediction_service_recur
     global _ai_service_first, _ai_service_recur, _ai_service_ltv
     global _ltv_service, _risk_service, _ai_service_risk, _marketing_service, _ai_service_marketing
-    loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(None, _load_all_services)
-    (
-        _prediction_service_first, _prediction_service_recur,
-        _ai_service_first, _ai_service_recur,
-        _ltv_service, _ai_service_ltv, _risk_service, _ai_service_risk, _marketing_service, _ai_service_marketing,
-    ) = result
-    print("Both SR models loaded and services ready.")
+    global _startup_done
+
+    async def _background_load():
+        global _prediction_service_first, _prediction_service_recur
+        global _ai_service_first, _ai_service_recur, _ai_service_ltv
+        global _ltv_service, _risk_service, _ai_service_risk, _marketing_service, _ai_service_marketing
+        global _startup_done
+        try:
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(None, _load_all_services)
+            (
+                _prediction_service_first, _prediction_service_recur,
+                _ai_service_first, _ai_service_recur,
+                _ltv_service, _ai_service_ltv, _risk_service, _ai_service_risk, _marketing_service, _ai_service_marketing,
+            ) = result
+            _startup_done = True
+            print("All services loaded and ready.")
+        except Exception as e:
+            print(f"FATAL: service loading failed — {e}")
+            _startup_done = True  # allow health check to pass; API calls will fail gracefully
+
+    asyncio.create_task(_background_load())
     yield

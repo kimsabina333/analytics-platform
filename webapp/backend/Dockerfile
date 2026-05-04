@@ -17,14 +17,14 @@ COPY banks_mapping.py /app/vendor/alert/banks_mapping.py
 RUN touch /app/vendor/alert/__init__.py
 
 # Data files (rename to remove " (1)" suffix)
-COPY "idata_sr_ts (1).nc" "/app/vendor/idata/idata_sr_ts.nc"
-COPY "ordinal_encoder (1).joblib" "/app/vendor/idata/ordinal_encoder.joblib"
+COPY ["idata_sr_ts (1).nc", "/app/vendor/idata/idata_sr_ts.nc"]
+COPY ["ordinal_encoder (1).joblib", "/app/vendor/idata/ordinal_encoder.joblib"]
 COPY matched_groups_final.csv /app/vendor/idata/matched_groups_final.csv
 COPY banks_mapping.json /app/vendor/banks_mapping.json
 COPY "sr_alert_q_map.yaml" /app/vendor/idata/sr_alert_q_map.yaml
 
 # SQL templates
-COPY "sql_config (1).yaml" /app/vendor/sql_templates/sql_config.yaml
+COPY ["sql_config (1).yaml", "/app/vendor/sql_templates/sql_config.yaml"]
 COPY main.sql /app/vendor/sql_templates/main.sql
 COPY funnel.sql /app/vendor/sql_templates/funnel.sql
 COPY payments.sql /app/vendor/sql_templates/payments.sql

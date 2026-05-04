@@ -62,10 +62,15 @@ def _load_all_services():
 
     if settings.google_credentials_base64:
         import base64, tempfile
-        creds_json = base64.b64decode(settings.google_credentials_base64)
-        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
-        tmp.write(creds_json); tmp.flush(); tmp.close()
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = tmp.name
+        try:
+            cleaned = settings.google_credentials_base64.strip()
+            creds_json = base64.b64decode(cleaned)
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
+            tmp.write(creds_json); tmp.flush(); tmp.close()
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = tmp.name
+            print(f"GCP credentials loaded from base64 ({len(creds_json)} bytes)")
+        except Exception as e:
+            print(f"ERROR: failed to decode GOOGLE_CREDENTIALS_BASE64 — {e}")
     elif settings.google_application_credentials:
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = settings.google_application_credentials
     local_cache_dir = Path(__file__).parents[2] / ".runtime_cache"
@@ -210,8 +215,10 @@ async def lifespan(app: FastAPI):
             _startup_done = True
             print("All services loaded and ready.")
         except Exception as e:
+            import traceback
             print(f"FATAL: service loading failed — {e}")
-            _startup_done = True  # allow health check to pass; API calls will fail gracefully
+            traceback.print_exc()
+            _startup_done = True
 
     asyncio.create_task(_background_load())
     yield

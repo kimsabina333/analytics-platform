@@ -805,7 +805,7 @@ header {
       </div>
       <div class="nav-group">
         <div class="nav-item" id="mode-btn-risk" onclick="setMode('risk')">
-          <span>💳</span> Payment Assistant
+          <span>💳</span> Payment Adviser
         </div>
         <div class="nav-sub">
           <div class="nav-item" id="side-payment-risk" onclick="setMode('risk'); setPaymentView('risk')">
@@ -879,7 +879,7 @@ header {
             <div class="home-module">
               <div class="home-module-head">
                 <span class="home-module-icon">💳</span>
-                <span class="home-module-name">Payment Assistant</span>
+                <span class="home-module-name">Payment Adviser</span>
               </div>
               <div class="home-module-desc">Мониторинг риск-метрик по каждому MID. Отслеживает Chargeback Rate, Fraud Rate и VAMP Rate с порогами Visa — превышение грозит штрафами или блокировкой MID.</div>
               <div class="home-module-items">
@@ -916,11 +916,11 @@ header {
             </div>
             <div class="home-step">
               <div class="home-step-num">3</div>
-              <div class="home-step-body"><strong>Следите за риск-метриками</strong> — Payment Assistant → Risk Metrics. CB Rate и VAMP Rate выше 0.9% — это порог Visa Standard Program. Превышение → штрафы, в худшем случае закрытие MID.</div>
+              <div class="home-step-body"><strong>Следите за риск-метриками</strong> — Payment Adviser → Risk Metrics. CB Rate и VAMP Rate выше 0.9% — это порог Visa Standard Program. Превышение → штрафы, в худшем случае закрытие MID.</div>
             </div>
             <div class="home-step">
               <div class="home-step-num">4</div>
-              <div class="home-step-body"><strong>Получите план действий</strong> — Payment Assistant → AI Chat автоматически анализирует текущие метрики при первом открытии и предлагает конкретные шаги по снижению рисков.</div>
+              <div class="home-step-body"><strong>Получите план действий</strong> — Payment Adviser → AI Chat автоматически анализирует текущие метрики при первом открытии и предлагает конкретные шаги по снижению рисков.</div>
             </div>
           </div>
         </div>
@@ -1298,8 +1298,14 @@ function doLogout() {
   document.getElementById('app').style.display = 'none';
   closeAccountModal();
   ['first','recurring','ltv'].forEach(m => { chatHistories[m] = []; chatDomHistory[m] = ''; });
+  ['risk','cor','revenue','ratio'].forEach(s => {
+    riskChatHistories[s] = []; riskChatDomHistory[s] = ''; riskChatInited[s] = false;
+  });
   chatHistory = chatHistories[currentModel];
+  riskChatHistory = riskChatHistories['risk'];
   document.getElementById('messages').innerHTML = '';
+  const riskMsgsEl = document.getElementById('risk-chat-msgs');
+  if (riskMsgsEl) riskMsgsEl.innerHTML = '';
 }
 
 function openAccountModal() {
@@ -1489,6 +1495,13 @@ function togglePaymentViewMenu() {
 }
 
 function setPaymentView(view) {
+  // save current section's chat state before switching
+  riskChatHistories[paymentView] = riskChatHistory;
+  const riskEl = document.getElementById('risk-chat-msgs');
+  if (riskEl) riskChatDomHistory[paymentView] = riskEl.innerHTML;
+  // restore new section's chat state
+  riskChatHistory = riskChatHistories[view] || [];
+  if (riskEl) { riskEl.innerHTML = riskChatDomHistory[view] || ''; riskEl.scrollTop = riskEl.scrollHeight; }
   paymentView = view;
   updateSidebarActive();
   const isCoR = view === 'cor';
@@ -2085,14 +2098,12 @@ const chatDomHistory = { first: '', recurring: '', ltv: '' };
 let chatHistory = chatHistories['first'];
 
 function _switchChatModel(newModel) {
+  // interpreter chat
+  chatHistories[currentModel] = chatHistory;
   const msgsEl = document.getElementById('messages');
-  // save current model state
-  chatHistories[currentModel]  = chatHistory;
-  chatDomHistory[currentModel] = msgsEl.innerHTML;
-  // restore new model state
-  chatHistory  = chatHistories[newModel] || [];
-  msgsEl.innerHTML = chatDomHistory[newModel] || '';
-  msgsEl.scrollTop = msgsEl.scrollHeight;
+  if (msgsEl) chatDomHistory[currentModel] = msgsEl.innerHTML;
+  chatHistory = chatHistories[newModel] || [];
+  if (msgsEl) { msgsEl.innerHTML = chatDomHistory[newModel] || ''; msgsEl.scrollTop = msgsEl.scrollHeight; }
 }
 
 function handleKey(e) {
@@ -2873,8 +2884,10 @@ function renderRiskChart(rows, midLabel) {
 }
 
 // ─── RISK CHAT ─────────────────────────────────────────────────────────────────
-let riskChatHistory = [];
-let riskChatInitialized = false;
+const riskChatHistories  = { risk: [], cor: [], revenue: [], ratio: [] };
+const riskChatDomHistory = { risk: '', cor: '', revenue: '', ratio: '' };
+const riskChatInited     = { risk: false, cor: false, revenue: false, ratio: false };
+let riskChatHistory = riskChatHistories['risk'];
 
 const RISK_CHAT_SUGGESTIONS = [
   'What are the current risk alerts?',
@@ -2924,8 +2937,8 @@ function renderRiskSuggestions() {
 
 function initRiskChat() {
   renderRiskSuggestions();
-  if (!riskChatInitialized) {
-    riskChatInitialized = true;
+  if (!riskChatInited[paymentView]) {
+    riskChatInited[paymentView] = true;
     if (paymentView === 'cor') {
       sendRiskChat('Analyze current Cost of Revenue for adyen uae and adyen us. Identify the biggest breakdowns and changes.');
     } else if (paymentView === 'revenue') {

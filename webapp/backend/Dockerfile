@@ -39,4 +39,4 @@ ENV MPLBACKEND=Agg
 ENV ARVIZ_CACHE_DIR=/tmp/arviz_cache
 
 # PORT is injected by Railway; fall back to 8000 locally
-CMD uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout-keep-alive 120
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout-keep-alive 120"]

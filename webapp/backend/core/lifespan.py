@@ -131,32 +131,38 @@ def _load_all_services():
     ai_svc_first = AIService(pred_svc_first, settings.openrouter_api_key, model_label="first")
 
     # ── Recurring model ───────────────────────────────────────────────────────
-    q_map_path_recur = VENDOR_DIR / "idata" / "sr_alert_q_map_recur.yaml"
-    recur_sql_path = str(VENDOR_DIR / "sql_templates_recur") + "/"
+    pred_svc_recur = None
+    ai_svc_recur = None
+    try:
+        q_map_path_recur = VENDOR_DIR / "idata" / "sr_alert_q_map_recur.yaml"
+        recur_sql_path = str(VENDOR_DIR / "sql_templates_recur") + "/"
 
-    if q_map_path_recur.exists():
-        with open(str(q_map_path_recur)) as f:
-            q_map_recur = yaml.safe_load(f)
-    else:
-        print("WARNING: sr_alert_q_map_recur.yaml not found — recurring model using default q=0.05")
-        q_map_recur = {}
+        if q_map_path_recur.exists():
+            with open(str(q_map_path_recur)) as f:
+                q_map_recur = yaml.safe_load(f)
+        else:
+            print("WARNING: sr_alert_q_map_recur.yaml not found — recurring model using default q=0.05")
+            q_map_recur = {}
 
-    model_svc_recur = ModelService(
-        encoder=encoder,
-        q_map=q_map_recur,
-        vendor_dir=VENDOR_DIR,
-        model_path="idata/idata_sr_rec_ts.nc",
-    )
-    data_svc_recur = DataService(vendor_dir=VENDOR_DIR, sql_path=recur_sql_path)
-    pred_svc_recur = PredictionService(
-        model_svc_recur,
-        data_svc_recur,
-        cache_svc,
-        cache_prefix="recur:",
-        db_svc=db_svc,
-        model_key="recurring",
-    )
-    ai_svc_recur = AIService(pred_svc_recur, settings.openrouter_api_key, model_label="recurring")
+        model_svc_recur = ModelService(
+            encoder=encoder,
+            q_map=q_map_recur,
+            vendor_dir=VENDOR_DIR,
+            model_path="idata/idata_sr_rec_ts.nc",
+        )
+        data_svc_recur = DataService(vendor_dir=VENDOR_DIR, sql_path=recur_sql_path)
+        pred_svc_recur = PredictionService(
+            model_svc_recur,
+            data_svc_recur,
+            cache_svc,
+            cache_prefix="recur:",
+            db_svc=db_svc,
+            model_key="recurring",
+        )
+        ai_svc_recur = AIService(pred_svc_recur, settings.openrouter_api_key, model_label="recurring")
+        print("Recurring SR model ready.")
+    except Exception as e:
+        print(f"WARNING: Recurring SR model failed to load — {e}")
 
     # ── LTV model ─────────────────────────────────────────────────────────────
     ltv_svc = None

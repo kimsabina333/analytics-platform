@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import List
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from backend.core.config import settings
 from backend.core.lifespan import get_prediction_service
@@ -13,6 +13,8 @@ router = APIRouter()
 @router.get("/overview", response_model=OverviewResponse)
 async def get_overview(model: str = Query("first")):
     pred_svc = get_prediction_service(model)
+    if pred_svc is None:
+        raise HTTPException(status_code=503, detail=f"Model '{model}' is not available")
     segments = await pred_svc.get_overview()
     return OverviewResponse(
         segments=segments,
@@ -24,5 +26,7 @@ async def get_overview(model: str = Query("first")):
 @router.get("/alerts", response_model=List[SegmentPredictionResult])
 async def get_alerts(model: str = Query("first")):
     pred_svc = get_prediction_service(model)
+    if pred_svc is None:
+        raise HTTPException(status_code=503, detail=f"Model '{model}' is not available")
     segments = await pred_svc.get_overview()
     return [s for s in segments if s.is_alert]

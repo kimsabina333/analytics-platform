@@ -19,6 +19,8 @@ class ComboRequest(BaseModel):
 @router.get("/dimensions")
 async def get_dimensions(model: str = Query("first")):
     pred_svc = get_prediction_service(model)
+    if pred_svc is None:
+        raise HTTPException(status_code=503, detail=f"Model '{model}' is not available")
     return {
         "dimensions": FEATURES,
         "categories": pred_svc.model.categories,
@@ -33,6 +35,8 @@ async def get_segment_sr(
     model: str = Query("first"),
 ):
     pred_svc = get_prediction_service(model)
+    if pred_svc is None:
+        raise HTTPException(status_code=503, detail=f"Model '{model}' is not available")
     result = await pred_svc.compute_segment_sr(dimension, value, q)
     if result is None:
         raise HTTPException(status_code=404, detail="Insufficient data for this segment")
@@ -42,6 +46,8 @@ async def get_segment_sr(
 @router.post("/sr/combo", response_model=Optional[SegmentPredictionResult])
 async def get_combo_sr(body: ComboRequest):
     pred_svc = get_prediction_service(body.model)
+    if pred_svc is None:
+        raise HTTPException(status_code=503, detail=f"Model '{body.model}' is not available")
     result = await pred_svc.compute_segment_sr_combo(body.filters, body.q)
     if result is None:
         raise HTTPException(status_code=404, detail="Insufficient data for this combination")
@@ -56,4 +62,6 @@ async def get_top_segments(
     model: str = Query("first"),
 ):
     pred_svc = get_prediction_service(model)
+    if pred_svc is None:
+        raise HTTPException(status_code=503, detail=f"Model '{model}' is not available")
     return await pred_svc.get_top_segments(dimension, n, order)

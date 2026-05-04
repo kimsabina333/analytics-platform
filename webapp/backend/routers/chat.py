@@ -1,6 +1,6 @@
 import json
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from backend.core.lifespan import get_ai_service
@@ -12,6 +12,8 @@ router = APIRouter()
 @router.post("")
 async def chat(request: ChatRequest):
     ai_svc = get_ai_service(request.model)
+    if ai_svc is None:
+        raise HTTPException(status_code=503, detail=f"Model '{request.model}' is not available")
 
     async def event_generator():
         async for event in ai_svc.stream_response(

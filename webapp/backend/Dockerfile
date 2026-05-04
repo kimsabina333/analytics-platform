@@ -41,6 +41,7 @@ RUN cp "/tmp/sr_rec/idata_sr_rec_ts (1).nc"          /app/vendor/idata/idata_sr_
  && cp /tmp/sr_rec/main.sql                           /app/vendor/sql_templates_recur/main.sql \
  && cp /tmp/sr_rec/funnel.sql                         /app/vendor/sql_templates_recur/funnel.sql \
  && cp /tmp/sr_rec/app.sql                            /app/vendor/sql_templates_recur/app.sql \
+ && cp /tmp/sr_rec/firsts.sql                         /app/vendor/sql_templates_recur/firsts.sql \
  && cp "/tmp/sr_rec/payments (1).sql"                 /app/vendor/sql_templates_recur/payments.sql \
  && cp "/tmp/sr_rec/sql_config (2).yaml"              /app/vendor/sql_templates_recur/sql_config.yaml
 

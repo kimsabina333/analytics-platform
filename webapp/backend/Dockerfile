@@ -10,7 +10,7 @@ COPY webapp/backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Vendor: ML code with correct import structure
-RUN mkdir -p /app/vendor/idata /app/vendor/sql_templates /app/vendor/alert
+RUN mkdir -p /app/vendor/idata /app/vendor/sql_templates /app/vendor/sql_templates_recur /app/vendor/alert
 COPY utils.py /app/vendor/utils.py
 COPY banks_mapping.py /app/vendor/banks_mapping.py
 COPY banks_mapping.py /app/vendor/alert/banks_mapping.py
@@ -22,6 +22,15 @@ COPY ["ordinal_encoder (1).joblib", "/app/vendor/idata/ordinal_encoder.joblib"]
 COPY matched_groups_final.csv /app/vendor/idata/matched_groups_final.csv
 COPY banks_mapping.json /app/vendor/banks_mapping.json
 COPY "sr_alert_q_map.yaml" /app/vendor/idata/sr_alert_q_map.yaml
+
+# Recurring SR model files
+COPY ["sr recurring/idata_sr_rec_ts (1).nc", "/app/vendor/idata/idata_sr_rec_ts.nc"]
+COPY ["sr recurring/sr_alert_q_map_recur (1).yaml", "/app/vendor/idata/sr_alert_q_map_recur.yaml"]
+COPY "sr recurring/main.sql" /app/vendor/sql_templates_recur/main.sql
+COPY "sr recurring/funnel.sql" /app/vendor/sql_templates_recur/funnel.sql
+COPY "sr recurring/app.sql" /app/vendor/sql_templates_recur/app.sql
+COPY ["sr recurring/payments (1).sql", "/app/vendor/sql_templates_recur/payments.sql"]
+COPY ["sr recurring/sql_config (2).yaml", "/app/vendor/sql_templates_recur/sql_config.yaml"]
 
 # SQL templates
 COPY ["sql_config (1).yaml", "/app/vendor/sql_templates/sql_config.yaml"]

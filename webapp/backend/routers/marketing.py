@@ -18,12 +18,20 @@ def _svc():
 
 @router.get("/roi")
 async def get_roi(source: str = Query(None)):
-    return await _svc().get_roi(source)
+    try:
+        return await _svc().get_roi(source)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(502, f"Marketing ROI query failed: {e}")
 
 
 @router.get("/sources")
 async def get_sources():
-    return await _svc().get_sources()
+    try:
+        return await _svc().get_sources()
+    except Exception as e:
+        raise HTTPException(502, f"Marketing sources query failed: {e}")
 
 
 @router.post("/chat")

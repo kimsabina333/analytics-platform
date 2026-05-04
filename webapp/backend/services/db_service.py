@@ -92,8 +92,26 @@ class DBService:
         con.executescript(_DDL)
         con.commit()
         con.close()
-        # Remove stale entries left from previous run
         self.cache_evict_expired()
+        self._seed_default_users()
+
+    def _seed_default_users(self) -> None:
+        import hashlib, binascii
+        defaults = [
+            ("sabina.kim@nvs.team", "Nvs2026!"),
+            ("demo@test.com",       "test123"),
+        ]
+        for email, password in defaults:
+            if self.user_by_email(email):
+                continue
+            salt = hashlib.sha256(email.encode()).hexdigest().encode("ascii")
+            dk = hashlib.pbkdf2_hmac("sha512", password.encode(), salt, 100_000)
+            pw_hash = (salt + binascii.hexlify(dk)).decode("ascii")
+            try:
+                self.user_create(email, pw_hash)
+                print(f"Seeded default user: {email}")
+            except Exception:
+                pass
 
     # ── cache ─────────────────────────────────────────────────────────────────
 

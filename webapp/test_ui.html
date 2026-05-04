@@ -1,0 +1,3174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Analytics Platform</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f172a'/%3E%3Crect x='4' y='18' width='5' height='10' rx='1.5' fill='%2306b6d4'/%3E%3Crect x='11' y='12' width='5' height='16' rx='1.5' fill='%2306b6d4' opacity='.8'/%3E%3Crect x='18' y='7' width='5' height='21' rx='1.5' fill='%2306b6d4' opacity='.6'/%3E%3Crect x='25' y='14' width='5' height='14' rx='1.5' fill='%23f87171' opacity='.9'/%3E%3C/svg%3E">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Marcellus&family=Montserrat:wght@300;400&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0f1117;
+  --surface:  #1a1d27;
+  --surface2: #21263a;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.13);
+  --accent:   #3b82f6;
+  --accent2:  #60a5fa;
+  --success:  #10b981;
+  --warning:  #f59e0b;
+  --danger:   #ef4444;
+  --cyan:     #06b6d4;
+  --text:     #f1f5f9;
+  --text2:    #94a3b8;
+  --text3:    #475569;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ═══════════════════════════════════════════════
+   AUTH SCREEN  — clean minimal
+═══════════════════════════════════════════════ */
+#auth-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: #0a0a0f;
+  font-family: 'Inter', sans-serif;
+}
+
+.auth-card {
+  width: 380px;
+  background: #111118;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 40px 36px 36px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+
+.auth-logo {
+  font-size: 20px; font-weight: 700;
+  color: #f1f5f9; letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.auth-logo .dot { color: var(--accent); }
+
+.auth-sub {
+  font-size: 13px; color: var(--text2);
+  margin-bottom: 32px;
+}
+
+/* segmented tab switcher */
+.auth-tabs {
+  display: flex;
+  background: #1a1a24;
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 24px;
+  border: none;
+}
+.auth-tab {
+  flex: 1; padding: 8px 0;
+  border: none; border-radius: 7px;
+  font-size: 13px; font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  color: var(--text2);
+  background: transparent;
+  cursor: pointer; transition: all 0.18s;
+}
+.auth-tab.active {
+  background: #fff;
+  color: #0a0a0f;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* inputs */
+.auth-form { display: flex; flex-direction: column; gap: 10px; }
+.auth-form input {
+  width: 100%;
+  padding: 11px 14px;
+  background: #0d0d14;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 9px;
+  color: var(--text); font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box; outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.auth-form input:focus {
+  border-color: var(--accent);
+  background: #0f0f18;
+}
+.auth-form input::placeholder { color: var(--text3); }
+
+/* submit */
+.auth-submit {
+  margin-top: 6px; width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  border: none; border-radius: 9px;
+  color: #fff; font-size: 14px; font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+}
+.auth-submit:hover:not(:disabled) { opacity: 0.88; }
+.auth-submit:active:not(:disabled) { transform: scale(0.99); }
+.auth-submit:disabled { opacity: 0.35; cursor: default; }
+
+.auth-error {
+  font-size: 12px; color: var(--danger);
+  text-align: center; min-height: 18px; margin-top: 6px;
+}
+
+/* ═══════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════ */
+header {
+  height: 52px; flex-shrink: 0;
+  background: rgba(26,29,39,0.92);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; padding: 0 16px;
+  position: relative; z-index: 200;
+}
+.hdr-toggle {
+  width: 30px; height: 30px; border: none; border-radius: 6px;
+  background: transparent; color: var(--text2); font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s, color 0.15s; flex-shrink: 0;
+}
+.hdr-toggle:hover { background: var(--surface2); color: var(--text); }
+.hdr-brand {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  letter-spacing: -0.01em; white-space: nowrap; flex-shrink: 0;
+}
+.hdr-brand .dot { color: var(--accent); }
+.hdr-sep { width: 1px; height: 20px; background: var(--border2); flex-shrink: 0; }
+.tab-bar { display: flex; gap: 2px; }
+.tab {
+  padding: 6px 14px; border-radius: 6px;
+  font-size: 13px; font-weight: 500; color: var(--text2);
+  cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.tab:hover { background: var(--surface2); color: var(--text); }
+.tab.active { background: rgba(59,130,246,0.1); color: var(--accent2); }
+.hdr-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.user-chip {
+  font-size: 12px; color: var(--text2);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px; max-width: 180px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.btn-logout {
+  padding: 5px 12px; border-radius: 6px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text2); font-size: 12px; font-family: 'Inter', sans-serif;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+/* ── Model dropdown ── */
+.model-wrap { display: flex; align-items: center; gap: 8px; }
+.model-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+.model-dd { position: relative; }
+.model-btn {
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; color: var(--text); font-size: 13px; font-weight: 500;
+  cursor: pointer; min-width: 138px; font-family: 'Inter', sans-serif; transition: border-color 0.15s;
+}
+.model-btn:hover { border-color: var(--accent); }
+.model-btn .chev { margin-left: auto; color: var(--text3); font-size: 9px; transition: transform 0.15s; }
+.model-btn.open .chev { transform: rotate(180deg); }
+.model-menu {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; min-width: 100%;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 10px; z-index: 9999;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6); overflow: hidden;
+}
+.model-menu.open { display: block; }
+.model-opt {
+  padding: 9px 13px; font-size: 13px; cursor: pointer;
+  color: var(--text2); display: flex; align-items: center; gap: 8px; transition: background 0.1s;
+}
+.model-opt:hover { background: var(--surface2); color: var(--text); }
+.model-opt.active { color: var(--accent2); background: rgba(59,130,246,0.07); }
+.model-opt .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); flex-shrink: 0; }
+.model-opt.active .dot { background: var(--accent); }
+.model-opt .sub { font-size: 11px; color: var(--text3); margin-left: auto; }
+
+/* ═══════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════ */
+.app-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+/* Sidebar */
+.sidebar {
+  width: 210px; flex-shrink: 0;
+  background: var(--surface); border-right: 1px solid var(--border);
+  overflow: hidden; transition: width 0.2s ease;
+  display: flex; flex-direction: column;
+}
+.sidebar.collapsed { width: 0; }
+.sidebar-inner { width: 210px; padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; flex: 1; min-height: 0; }
+.sidebar-spacer { flex: 1; min-height: 24px; }
+.user-panel-btn {
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.user-panel-btn .nav-item {
+  min-width: 0;
+}
+.user-panel-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-sec { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 10px 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: 6px; cursor: pointer;
+  color: var(--text2); font-size: 13px; font-weight: 500; transition: all 0.15s;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: rgba(59,130,246,0.1); color: var(--accent2); }
+.nav-group { display: flex; flex-direction: column; gap: 2px; }
+.nav-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 2px 0 8px 24px;
+  padding-left: 9px;
+  border-left: 1px solid var(--border);
+}
+.nav-sub .nav-item {
+  padding: 7px 9px;
+  font-size: 12px;
+  gap: 7px;
+}
+.nav-meta {
+  margin-left: auto;
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-item-soon {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+.nav-soon-badge {
+  margin-left: auto;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent2);
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 1px 5px;
+  opacity: 0.8;
+}
+.nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* Content */
+.content { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+.mode-panel { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.mode-panel.active { display: flex; }
+.page { display: none; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+.page.active { display: flex; }
+
+/* ═══════════════════════════════════════════════
+   SHARED COMPONENTS
+═══════════════════════════════════════════════ */
+.loading { display: flex; align-items: center; gap: 10px; color: var(--text2); padding: 20px; font-size: 14px; }
+.spinner {
+  width: 16px; height: 16px; border: 2px solid var(--border2);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.75s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+.badge-ok    { background: rgba(16,185,129,0.12); color: var(--success); }
+.badge-alert { background: rgba(239,68,68,0.12);  color: var(--danger); }
+.badge-warn  { background: rgba(245,158,11,0.12); color: var(--warning); }
+
+.btn-primary {
+  padding: 7px 18px; border-radius: 7px; border: none;
+  background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+  cursor: pointer; transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--accent2); }
+.btn-secondary {
+  padding: 7px 16px; border-radius: 7px;
+  border: 1px solid var(--border2); background: transparent;
+  color: var(--text2); font-size: 13px; font-family: 'Inter', sans-serif;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-secondary:hover { color: var(--text); border-color: var(--accent); }
+.src-pill {
+  padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border2);
+  background: transparent; color: var(--text2); font-size: 12px;
+  font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.15s;
+  white-space: nowrap;
+}
+.src-pill:hover { border-color: var(--accent); color: var(--text); }
+.src-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 5000;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.62);
+  backdrop-filter: blur(5px);
+}
+.modal-backdrop.show { display: flex; }
+.account-modal {
+  width: min(440px, calc(100vw - 32px));
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  box-shadow: 0 20px 70px rgba(0,0,0,0.55);
+  padding: 18px;
+}
+.modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.modal-title { font-size:15px; font-weight:700; color:var(--text); }
+.modal-close {
+  width:30px; height:30px; border-radius:8px; border:1px solid var(--border);
+  background:transparent; color:var(--text2); cursor:pointer;
+}
+.modal-close:hover { color:var(--text); border-color:var(--border2); }
+.account-row { padding:10px 0; border-bottom:1px solid var(--border); }
+.account-label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:5px; }
+.account-value { font-size:13px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.account-form { display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+.account-form input {
+  width:100%; padding:10px 12px; border-radius:8px;
+  background:var(--surface2); border:1px solid var(--border2);
+  color:var(--text); font-size:13px; font-family:'Inter',sans-serif; outline:none;
+}
+.account-form input:focus { border-color:var(--accent); }
+.account-msg { min-height:18px; font-size:12px; color:var(--text3); }
+.account-msg.error { color:var(--danger); }
+.account-msg.ok { color:var(--success); }
+
+/* ═══════════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════════ */
+.dash-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+#sr-section  { display: flex; flex-direction: column; gap: 14px; }
+#ltv-section { display: flex; flex-direction: column; gap: 14px; }
+
+.alert-banner {
+  display: none; align-items: center; gap: 8px;
+  padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5;
+}
+.alert-banner.show { display: flex; }
+
+.dash-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dash-controls label { font-size: 12px; color: var(--text3); margin-right: 2px; }
+.range-btn {
+  padding: 4px 11px; border-radius: 6px; border: 1px solid var(--border);
+  background: transparent; color: var(--text2); font-size: 12px;
+  cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+}
+.range-btn:hover { border-color: var(--border2); color: var(--text); }
+.range-btn.active { border-color: var(--accent); color: var(--accent2); background: rgba(59,130,246,0.08); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.segment-group-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.segment-group-head:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+.segment-group-title {
+  font-size: 11px;
+  color: var(--text2);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.segment-group-count {
+  color: var(--text3);
+  font-size: 11px;
+}
+.seg-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 15px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
+  min-width: 0;
+}
+.seg-card:hover { border-color: var(--border2); box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+.seg-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(59,130,246,0.25); }
+.seg-card.alert { border-left: 3px solid var(--danger); }
+.seg-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; margin-bottom: 6px; }
+.seg-name {
+  min-width: 0;
+  font-size: 13px; font-weight: 600; color: var(--text);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.seg-name.combo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.seg-name-line {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+.seg-name-k {
+  color: var(--text2);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.seg-name-v {
+  color: var(--text);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.seg-dim  { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.seg-sr   { font-size: 22px; font-weight: 700; color: var(--text); }
+.seg-ci   { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+#chart-container {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; min-height: 340px;
+}
+
+/* LTV */
+.kpi-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+.risk-chip {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 10px; border-radius:100px; font-size:12px; font-weight:600;
+  border:1px solid var(--border2);
+}
+.risk-chip .dot { width:7px;height:7px;border-radius:50%; }
+.risk-chip.ok    { background:rgba(16,185,129,0.08); color:var(--success); }
+.risk-chip.warn  { background:rgba(245,158,11,0.1);  color:var(--warning); }
+.risk-chip.alert { background:rgba(239,68,68,0.1);   color:var(--danger);  }
+.kpi-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 20px; flex: 1; min-width: 130px;
+}
+.kpi-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.kpi-val { font-size: 22px; font-weight: 700; color: var(--text); }
+.ltv-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ltv-controls label { font-size: 12px; color: var(--text3); }
+.ltv-controls select {
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px;
+  color: var(--text); padding: 5px 10px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none;
+}
+#ltv-chart-main { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-height: 380px; }
+
+/* ═══════════════════════════════════════════════
+   SEGMENTS
+═══════════════════════════════════════════════ */
+.seg-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.filter-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.filter-card h3 { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 12px; }
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 10px; }
+.flt-group label { display: block; font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.flt-group select {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 6px; color: var(--text); padding: 6px 8px;
+  font-size: 13px; font-family: 'Inter', sans-serif; outline: none;
+}
+.filter-actions { display: flex; gap: 8px; margin-top: 12px; }
+#seg-result { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-height: 280px; }
+
+/* ═══════════════════════════════════════════════
+   CHAT
+═══════════════════════════════════════════════ */
+.chat-layout { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+.chat-main {
+  flex: 1; min-width: 0; overflow: hidden;
+  display: flex; flex-direction: column; padding: 16px; gap: 12px;
+}
+#messages, #risk-chat-msgs, #marketing-chat-msgs { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+.msg { max-width: 86%; display: flex; flex-direction: column; gap: 4px; }
+.msg.user      { align-self: flex-end; }
+.msg.assistant { align-self: flex-start; }
+.msg.tool      { align-self: flex-start; }
+.msg-role { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 4px; }
+.msg.user .msg-role { text-align: right; }
+.msg-body {
+  padding: 10px 14px; border-radius: 10px;
+  font-size: 14px; line-height: 1.6;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+}
+.msg.user .msg-body { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.18); }
+.msg.tool .msg-body { font-size: 12px; color: var(--text2); font-family: monospace; }
+.typing {
+  padding: 10px 14px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text2); font-size: 14px; width: fit-content;
+}
+.chat-input-bar { display: flex; gap: 8px; }
+.chat-input-bar textarea {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 10px; color: var(--text); font-size: 14px;
+  padding: 10px 13px; resize: none; font-family: 'Inter', sans-serif;
+  outline: none; height: 44px; max-height: 120px; transition: border-color 0.2s;
+}
+.chat-input-bar textarea:focus { border-color: var(--accent); }
+.send-btn {
+  padding: 10px 18px; border-radius: 10px; border: none;
+  background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+  cursor: pointer; white-space: nowrap; transition: background 0.15s;
+}
+.send-btn:hover:not(:disabled) { background: var(--accent2); }
+.send-btn:disabled { opacity: 0.4; cursor: default; }
+
+.chat-sidebar {
+  width: 230px; flex-shrink: 0; border-left: 1px solid var(--border);
+  background: var(--surface); padding: 14px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.chat-sidebar h4 { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; }
+#suggestions-panel, #risk-suggestions, #marketing-suggestions { display: flex; flex-direction: column; gap: 8px; }
+.suggestion {
+  padding: 8px 10px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; font-size: 12px; color: var(--text2); cursor: pointer;
+  line-height: 1.4; transition: all 0.15s;
+}
+.suggestion:hover { border-color: var(--accent); color: var(--text); }
+
+/* Markdown */
+.msg-body p { margin: 0 0 8px; }
+.msg-body p:last-child { margin: 0; }
+.msg-body ul, .msg-body ol { padding-left: 20px; margin: 6px 0; }
+.msg-body li { margin: 2px 0; }
+.msg-body code { background: rgba(255,255,255,0.06); padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+.msg-body pre { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; overflow-x: auto; margin: 8px 0; }
+.msg-body strong { color: var(--text); }
+.msg-body h3, .msg-body h4 { color: var(--text); margin: 8px 0 4px; }
+.katex-display { overflow-x: auto; padding: 6px 0; }
+.plotly-embed {
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  min-height: 460px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin: 10px 0 14px;
+  overflow: visible;
+  flex-shrink: 0;
+}
+.plotly-embed.risk-plotly { min-height: 560px; }
+
+/* ═══════════════════════════════════════════════
+   HOME PAGE
+═══════════════════════════════════════════════ */
+.home-scroll { flex: 1; overflow-y: auto; padding: 32px 40px; display: flex; flex-direction: column; gap: 32px; width: 100%; }
+.home-hero { display: flex; flex-direction: column; gap: 8px; }
+.home-hero-title { font-size: 26px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+.home-hero-sub { font-size: 14px; color: var(--text2); line-height: 1.6; max-width: 600px; }
+.home-modules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.home-module {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+  display: flex; flex-direction: column; gap: 10px; transition: border-color 0.2s;
+}
+.home-module:hover { border-color: var(--border2); }
+.home-module-head { display: flex; align-items: center; gap: 10px; }
+.home-module-icon { font-size: 20px; }
+.home-module-name { font-size: 15px; font-weight: 600; color: var(--text); }
+.home-module-desc { font-size: 13px; color: var(--text2); line-height: 1.6; }
+.home-module-items { display: flex; flex-direction: column; gap: 5px; }
+.home-module-item { font-size: 12px; color: var(--text3); display: flex; align-items: baseline; gap: 6px; }
+.home-module-item::before { content: '—'; color: var(--border2); flex-shrink: 0; }
+.home-module-btn {
+  margin-top: 4px; align-self: flex-start;
+  padding: 7px 16px; border-radius: 8px; border: 1px solid var(--border2);
+  background: transparent; color: var(--text2); font-size: 12px; font-weight: 500;
+  font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.15s;
+}
+.home-module-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.home-section-title { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+.home-steps { display: flex; flex-direction: column; gap: 14px; }
+.home-step { display: flex; gap: 14px; align-items: flex-start; }
+.home-step-num {
+  width: 26px; height: 26px; border-radius: 50%; background: rgba(59,130,246,0.12);
+  border: 1px solid rgba(59,130,246,0.25); color: var(--accent);
+  font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.home-step-body { font-size: 13px; color: var(--text2); line-height: 1.65; padding-top: 3px; }
+.home-step-body strong { color: var(--text); }
+.home-terms { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+.home-term { font-size: 12px; color: var(--text2); line-height: 1.5; display: flex; gap: 8px; align-items: baseline; }
+.term-key { font-size: 11px; font-weight: 700; color: var(--accent); background: rgba(59,130,246,0.1); padding: 1px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+.roi-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.roi-table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; }
+.roi-table th, .roi-table td {
+  border: 1px solid rgba(255,255,255,0.07);
+  padding: 7px 9px;
+  text-align: right;
+  white-space: nowrap;
+}
+.roi-table th {
+  position: sticky; top: 0; z-index: 2;
+  background: #171b27; color: var(--text); font-weight: 700;
+}
+.roi-table th:first-child, .roi-table td:first-child {
+  position: sticky; left: 0; z-index: 3;
+  text-align: left; background: #171b27; color: var(--text); font-weight: 700;
+}
+.roi-cell.good { background: rgba(16,185,129,0.62); color: #fff; }
+.roi-cell.mid { background: rgba(59,130,246,0.50); color: #fff; }
+.roi-cell.bad { background: rgba(239,68,68,0.68); color: #fff; }
+.roi-cell.neutral { background: rgba(148,163,184,0.18); color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ AUTH SCREEN ═══════════════ -->
+<div id="auth-screen">
+
+  <div class="auth-card">
+    <div class="auth-logo">Analytics<span class="dot">.</span>Platform</div>
+    <div class="auth-sub">Business Intelligence & Analytics</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="atab-login" onclick="switchAuth('login')">Log In</button>
+      <button class="auth-tab" id="atab-register" onclick="switchAuth('register')">New User</button>
+    </div>
+    <div id="apanel-login">
+      <div class="auth-form">
+        <input type="email" id="login-email" placeholder="Email address" autocomplete="email">
+        <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="auth-submit" id="login-btn" onclick="doLogin()">Log In</button>
+        <div id="login-err" class="auth-error"></div>
+      </div>
+    </div>
+    <div id="apanel-register" style="display:none">
+      <div class="auth-form">
+        <input type="email" id="reg-email" placeholder="Email address" autocomplete="email">
+        <input type="password" id="reg-pw" placeholder="Password (min 8 characters)" autocomplete="new-password">
+        <input type="password" id="reg-pw2" placeholder="Confirm password" autocomplete="new-password"
+               onkeydown="if(event.key==='Enter')doRegister()">
+        <button class="auth-submit" id="reg-btn" onclick="doRegister()">Create Account</button>
+        <div id="reg-err" class="auth-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN APP ═══════════════ -->
+<div id="app" style="display:none; flex-direction:column; height:100vh;">
+
+<header>
+  <button class="hdr-toggle" onclick="toggleSidebar()">☰</button>
+  <div class="hdr-brand">Analytics<span class="dot">.</span></div>
+  <div class="hdr-sep"></div>
+  <!-- Tab bar: changes per mode -->
+  <div class="tab-bar" id="tab-bar-interpreter">
+    <div class="tab active" onclick="showPage('dashboard')">Dashboard</div>
+    <div class="tab" id="tab-segments" onclick="showPage('segments')">Segments</div>
+    <div class="tab" onclick="showPage('chat')">AI Chat</div>
+  </div>
+  <div class="tab-bar" id="tab-bar-risk" style="display:none">
+    <div class="tab active" onclick="showRiskSection('metrics')">Dashboard</div>
+    <div class="tab" onclick="showRiskSection('chat')">AI Chat</div>
+  </div>
+  <div class="tab-bar" id="tab-bar-marketing" style="display:none">
+    <div class="tab active" onclick="showMarketingSection('dashboard')">Dashboard</div>
+    <div class="tab" onclick="showMarketingSection('chat')">AI Chat</div>
+  </div>
+  <div class="hdr-right">
+    <!-- shown in Payment Assistant mode -->
+    <div class="model-wrap" id="hdr-segment-wrap" style="display:none">
+      <span class="model-lbl">View</span>
+      <div class="model-dd">
+        <div class="model-btn" id="payment-view-btn" onclick="togglePaymentViewMenu()">
+          <span id="payment-view-label-text">Risk Metrics</span>
+          <span class="chev">▼</span>
+        </div>
+        <div class="model-menu" id="payment-view-menu">
+          <div class="model-opt active" id="payment-opt-risk" onclick="setPaymentView('risk')">
+            <span class="dot"></span> Risk Metrics <span class="sub">CB/Fraud/VAMP</span>
+          </div>
+          <div class="model-opt" id="payment-opt-cor" onclick="setPaymentView('cor')">
+            <span class="dot"></span> CoR <span class="sub">Cost of revenue</span>
+          </div>
+          <div class="model-opt" id="payment-opt-revenue" onclick="setPaymentView('revenue')">
+            <span class="dot"></span> Revenue <span class="sub">Settled amount</span>
+          </div>
+          <div class="model-opt" id="payment-opt-ratio" onclick="setPaymentView('ratio')">
+            <span class="dot"></span> CoR / Revenue <span class="sub">Cost ratio</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- shown in Model Interpreter mode -->
+    <div class="model-wrap" id="hdr-model-wrap">
+      <span class="model-lbl">Model</span>
+      <div class="model-dd">
+        <div class="model-btn" id="model-btn" onclick="toggleModelMenu()">
+          <span id="model-label-text">SR First</span>
+          <span class="chev">▼</span>
+        </div>
+        <div class="model-menu" id="model-menu">
+          <div class="model-opt active" id="opt-first" onclick="setModel('first')">
+            <span class="dot"></span> SR First <span class="sub">First charge</span>
+          </div>
+          <div class="model-opt" id="opt-recurring" onclick="setModel('recurring')">
+            <span class="dot"></span> SR Recurring <span class="sub">Renewals</span>
+          </div>
+          <div class="model-opt" id="opt-ltv" onclick="setModel('ltv')">
+            <span class="dot"></span> LTV <span class="sub">Lifetime value</span>
+          </div>
+        </div>
+      </div>
+    </div><!-- hdr-model-wrap -->
+    <div class="hdr-sep"></div>
+    <div class="user-chip" id="user-chip"></div>
+    <button class="btn-logout" onclick="doLogout()">Sign out</button>
+  </div>
+</header>
+
+<div class="app-body">
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="nav-item active" id="mode-btn-home" onclick="setMode('home')">
+        <span>🏠</span> Главная
+      </div>
+      <div style="height:1px;background:var(--border);margin:6px 0 10px;"></div>
+      <div class="nav-sec">Workspace</div>
+      <div class="nav-group">
+        <div class="nav-item" id="mode-btn-interpreter" onclick="setMode('interpreter')">
+          <span>📊</span> Model Interpreter
+        </div>
+        <div class="nav-sub">
+          <div class="nav-item" id="side-model-first" onclick="setMode('interpreter'); setModel('first', { source: 'sidebar' })">
+            <span class="nav-dot"></span><span>SR First</span><span class="nav-meta">First charge</span>
+          </div>
+          <div class="nav-item" id="side-model-recurring" onclick="setMode('interpreter'); setModel('recurring', { source: 'sidebar' })">
+            <span class="nav-dot"></span><span>SR Recurring</span><span class="nav-meta">Renewals</span>
+          </div>
+          <div class="nav-item" id="side-model-ltv" onclick="setMode('interpreter'); setModel('ltv', { source: 'sidebar' })">
+            <span class="nav-dot"></span><span>LTV</span><span class="nav-meta">Lifetime value</span>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-item" id="mode-btn-risk" onclick="setMode('risk')">
+          <span>💳</span> Payment Assistant
+        </div>
+        <div class="nav-sub">
+          <div class="nav-item" id="side-payment-risk" onclick="setMode('risk'); setPaymentView('risk')">
+            <span class="nav-dot"></span><span>Risk Metrics</span><span class="nav-meta">CB, fraud</span>
+          </div>
+          <div class="nav-item" id="side-payment-cor" onclick="setMode('risk'); setPaymentView('cor')">
+            <span class="nav-dot"></span><span>CoR</span><span class="nav-meta">Costs</span>
+          </div>
+          <div class="nav-item" id="side-payment-revenue" onclick="setMode('risk'); setPaymentView('revenue')">
+            <span class="nav-dot"></span><span>Revenue</span><span class="nav-meta">Settlements</span>
+          </div>
+          <div class="nav-item" id="side-payment-ratio" onclick="setMode('risk'); setPaymentView('ratio')">
+            <span class="nav-dot"></span><span>CoR / Revenue</span><span class="nav-meta">Ratio</span>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-item" id="mode-btn-marketing" onclick="setMode('marketing')">
+          <span>📈</span> Marketing Adviser
+        </div>
+        <div class="nav-sub">
+          <div class="nav-item active" id="side-marketing-roi" onclick="setMode('marketing')">
+            <span class="nav-dot"></span><span>ROI Dashboard</span><span class="nav-meta">Sources</span>
+          </div>
+        </div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-item nav-item-soon">
+          <span>🛍</span> Product Adviser
+          <span class="nav-soon-badge">soon</span>
+        </div>
+      </div>
+      <div class="sidebar-spacer"></div>
+      <div class="user-panel-btn">
+        <div class="nav-sec">Account</div>
+        <div class="nav-item" onclick="openAccountModal()">
+          <span>⚙</span>
+          <span class="user-panel-email" id="sidebar-user-email">Account</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="content">
+
+    <!-- ══ HOME / GUIDE PAGE ══ -->
+    <div class="mode-panel" id="mode-home">
+      <div class="home-scroll">
+
+        <div class="home-hero">
+          <div class="home-hero-title">Analytics Platform</div>
+          <div class="home-hero-sub">Инструмент для мониторинга платёжных метрик и AI-анализа. Помогает находить проблемы, понимать причины и принимать обоснованные решения — без необходимости разбираться в статистике.</div>
+        </div>
+
+        <div>
+          <div class="home-section-title">Модули платформы</div>
+          <div class="home-modules" style="margin-top:12px;">
+            <div class="home-module">
+              <div class="home-module-head">
+                <span class="home-module-icon">📊</span>
+                <span class="home-module-name">Model Interpreter</span>
+              </div>
+              <div class="home-module-desc">Байесовский мониторинг Success Rate — процента успешных первых платежей. Модель знает «нормальный» SR для каждого сегмента и сигнализирует, когда реальный SR падает ниже ожидаемого диапазона.</div>
+              <div class="home-module-items">
+                <div class="home-module-item"><strong>Dashboard</strong> — обзор всех сегментов, алерты в реальном времени</div>
+                <div class="home-module-item"><strong>Segments</strong> — детальный анализ по 12 параметрам (MID, geo, offer и др.)</div>
+                <div class="home-module-item"><strong>AI Chat</strong> — вопросы на русском/английском, графики по запросу</div>
+              </div>
+              <button class="home-module-btn" onclick="setMode('interpreter')">Открыть →</button>
+            </div>
+            <div class="home-module">
+              <div class="home-module-head">
+                <span class="home-module-icon">💳</span>
+                <span class="home-module-name">Payment Assistant</span>
+              </div>
+              <div class="home-module-desc">Мониторинг риск-метрик по каждому MID. Отслеживает Chargeback Rate, Fraud Rate и VAMP Rate с порогами Visa — превышение грозит штрафами или блокировкой MID.</div>
+              <div class="home-module-items">
+                <div class="home-module-item"><strong>Risk Metrics</strong> — динамика CB / Fraud / VAMP по месяцам</div>
+                <div class="home-module-item"><strong>AI Chat</strong> — автоматический анализ аномалий и план действий</div>
+              </div>
+              <button class="home-module-btn" onclick="setMode('risk')">Открыть →</button>
+            </div>
+            <div class="home-module">
+              <div class="home-module-head">
+                <span class="home-module-icon">📈</span>
+                <span class="home-module-name">Marketing Adviser</span>
+              </div>
+              <div class="home-module-desc">Анализ эффективности маркетинговых каналов. ROI, CAC, CPM и GP по источникам (Facebook, Google, TikTok, ADQ) — с AI-анализом для перераспределения бюджета.</div>
+              <div class="home-module-items">
+                <div class="home-module-item"><strong>ROI Dashboard</strong> — сводка по источникам: spend, LTV, ROI, CAC</div>
+                <div class="home-module-item"><strong>AI Chat</strong> — оптимизация каналов и рекомендации по бюджету</div>
+              </div>
+              <button class="home-module-btn" onclick="setMode('marketing')">Открыть →</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="home-section-title">Как работать с платформой</div>
+          <div class="home-steps" style="margin-top:12px;">
+            <div class="home-step">
+              <div class="home-step-num">1</div>
+              <div class="home-step-body"><strong>Откройте Dashboard</strong> — красные карточки означают активные алерты: SR упал ниже ожидаемого модельного диапазона. Кликните на карточку, чтобы увидеть график с доверительным интервалом.</div>
+            </div>
+            <div class="home-step">
+              <div class="home-step-num">2</div>
+              <div class="home-step-body"><strong>Разберите причины через AI Chat</strong> — спросите "Почему упал SR у Google?" или "Сравни MID по SR". ИИ сам вызовет нужные инструменты, покажет данные и даст рекомендации.</div>
+            </div>
+            <div class="home-step">
+              <div class="home-step-num">3</div>
+              <div class="home-step-body"><strong>Следите за риск-метриками</strong> — Payment Assistant → Risk Metrics. CB Rate и VAMP Rate выше 0.9% — это порог Visa Standard Program. Превышение → штрафы, в худшем случае закрытие MID.</div>
+            </div>
+            <div class="home-step">
+              <div class="home-step-num">4</div>
+              <div class="home-step-body"><strong>Получите план действий</strong> — Payment Assistant → AI Chat автоматически анализирует текущие метрики при первом открытии и предлагает конкретные шаги по снижению рисков.</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="home-section-title">Глоссарий</div>
+          <div class="home-terms" style="margin-top:12px;">
+            <div class="home-term"><span class="term-key">SR</span> Success Rate — % успешных попыток оплаты</div>
+            <div class="home-term"><span class="term-key">CI</span> Доверительный интервал — ожидаемый диапазон SR по модели</div>
+            <div class="home-term"><span class="term-key">Alert</span> SR упал ниже нижней границы CI — значимое отклонение</div>
+            <div class="home-term"><span class="term-key">MID</span> Merchant ID — платёжный процессор (Adyen, Checkout и др.)</div>
+            <div class="home-term"><span class="term-key">CB Rate</span> Chargeback Rate = споры / транзакции. Порог Visa: >0.9%</div>
+            <div class="home-term"><span class="term-key">VAMP</span> Visa Acquirer Monitoring Program — CB+Fraud только Visa-карты</div>
+            <div class="home-term"><span class="term-key">LTV</span> Lifetime Value — прогноз выручки с клиента за весь срок</div>
+            <div class="home-term"><span class="term-key">ARPPU</span> Средний доход с платящего пользователя (first + upsell)</div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- mode-home -->
+
+    <div class="mode-panel active" id="mode-interpreter">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="page active" id="page-dashboard">
+        <div class="dash-scroll">
+          <div class="alert-banner" id="alert-banner"></div>
+          <div id="sr-section">
+            <div class="dash-controls">
+              <label>Date range:</label>
+              <button class="range-btn" onclick="setRange(7,this)">7d</button>
+              <button class="range-btn" onclick="setRange(14,this)">14d</button>
+              <button class="range-btn active" onclick="setRange(30,this)">30d</button>
+              <button class="range-btn" onclick="setRange(null,this)">All</button>
+              <span id="range-label" style="font-size:12px;color:var(--text3);margin-left:6px;"></span>
+            </div>
+            <div class="grid" id="overview-grid">
+              <div class="loading"><span class="spinner"></span> Loading segments…</div>
+            </div>
+            <div id="chart-container">
+              <div class="loading" style="color:var(--text3)">Select a segment above to view the SR chart</div>
+            </div>
+          </div>
+          <div id="ltv-section" style="display:none">
+            <div class="kpi-grid" id="ltv-kpis">
+              <div class="loading"><span class="spinner"></span> Loading LTV data…</div>
+            </div>
+            <div class="ltv-controls">
+              <label>Breakdown by:</label>
+              <select id="ltv-dim-select" onchange="loadLTVSegment(this.value)">
+                <option value="offer">offer</option>
+                <option value="geo">geo</option>
+                <option value="utm_source">utm_source</option>
+                <option value="channel">channel</option>
+                <option value="gender">gender</option>
+                <option value="age">age</option>
+                <option value="payment_method">payment_method</option>
+                <option value="card_type">card_type</option>
+                <option value="card_brand">card_brand</option>
+              </select>
+            </div>
+            <div id="ltv-chart-main"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SEGMENTS ── -->
+      <div class="page" id="page-segments">
+        <div class="seg-scroll">
+          <div class="filter-card">
+            <h3>Segment Filter</h3>
+            <div class="filter-grid" id="filter-grid">
+              <div class="loading"><span class="spinner"></span> Loading dimensions…</div>
+            </div>
+            <div class="filter-actions">
+              <button class="btn-primary" onclick="applySegment()">Analyze</button>
+              <button class="btn-secondary" onclick="resetSegment()">Reset</button>
+            </div>
+          </div>
+          <div id="seg-result">
+            <div class="loading" style="color:var(--text3)">Configure filters above and click Analyze</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CHAT ── -->
+      <div class="page" id="page-chat">
+        <div class="chat-layout">
+          <div class="chat-main">
+            <div id="messages"></div>
+            <div class="chat-input-bar">
+              <textarea id="chat-input" placeholder="Ask about your SR or LTV data…" onkeydown="handleKey(event)"></textarea>
+              <button class="send-btn" id="send-btn" onclick="sendChat()">Send</button>
+            </div>
+          </div>
+          <div class="chat-sidebar">
+            <h4>Suggested Questions</h4>
+            <div id="suggestions-panel"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- mode-interpreter -->
+
+    <!-- ══ RISK ADVISOR MODE ══ -->
+    <div class="mode-panel" id="mode-risk">
+
+      <!-- ── RISK METRICS PAGE ── -->
+      <div class="page active" id="risk-page-metrics">
+        <div class="dash-scroll">
+          <div id="risk-anomaly-banner" class="alert-banner"></div>
+          <div id="risk-controls" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <label style="font-size:12px;color:var(--text3)">MID:</label>
+            <select id="risk-mid-select" onchange="loadRiskTrends()"
+              style="background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+                     color:var(--text);font-size:13px;padding:6px 10px;font-family:inherit;outline:none;">
+              <option value="">All MIDs</option>
+            </select>
+            <div id="risk-summary-chips" style="display:flex;gap:8px;flex-wrap:wrap;margin-left:4px;"></div>
+          </div>
+          <div id="cor-controls" style="display:none;align-items:center;gap:12px;flex-wrap:wrap;">
+            <label style="font-size:12px;color:var(--text3)">Merchant account:</label>
+            <select id="cor-merchant-select" onchange="onCoRMerchantChange()"
+              style="background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+                     color:var(--text);font-size:13px;padding:6px 10px;font-family:inherit;outline:none;">
+              <option value="">All accounts</option>
+            </select>
+            <label style="font-size:12px;color:var(--text3)">Breakdown:</label>
+            <select id="cor-breakdown-select" onchange="loadCoRChart()"
+              style="background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+                     color:var(--text);font-size:13px;padding:6px 10px;font-family:inherit;outline:none;">
+              <option value="">All breakdowns</option>
+            </select>
+          </div>
+          <div id="revenue-controls" style="display:none;align-items:center;gap:12px;flex-wrap:wrap;">
+            <label style="font-size:12px;color:var(--text3)">MID:</label>
+            <select id="revenue-mid-select" onchange="loadRevenueChart()"
+              style="background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+                     color:var(--text);font-size:13px;padding:6px 10px;font-family:inherit;outline:none;">
+              <option value="">All MIDs</option>
+            </select>
+            <label style="font-size:12px;color:var(--text3)">Event date:</label>
+            <select id="revenue-event-select" onchange="loadRevenueChart()"
+              style="background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+                     color:var(--text);font-size:13px;padding:6px 10px;font-family:inherit;outline:none;">
+              <option value="">All events</option>
+              <option value="Authorization">Authorization</option>
+              <option value="Settlement">Settlement</option>
+              <option value="Lifecycle Settled">Lifecycle Settled</option>
+            </select>
+          </div>
+          <div id="ratio-controls" style="display:none;align-items:center;gap:12px;flex-wrap:wrap;">
+            <label style="font-size:12px;color:var(--text3)">MID:</label>
+            <select id="ratio-mid-select" onchange="loadRatioChart()"
+              style="background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+                     color:var(--text);font-size:13px;padding:6px 10px;font-family:inherit;outline:none;">
+              <option value="">All MIDs</option>
+            </select>
+            <label style="font-size:12px;color:var(--text3)">Revenue date:</label>
+            <select id="ratio-event-select" onchange="loadRatioChart()"
+              style="background:var(--surface2);border:1px solid var(--border2);border-radius:7px;
+                     color:var(--text);font-size:13px;padding:6px 10px;font-family:inherit;outline:none;">
+              <option value="Settlement">Settlement</option>
+              <option value="Authorization">Authorization</option>
+              <option value="Lifecycle Settled">Lifecycle Settled</option>
+            </select>
+          </div>
+          <div id="risk-chart" style="background:var(--surface);border:1px solid var(--border);
+               border-radius:12px;padding:16px;min-height:520px;">
+            <div class="loading"><span class="spinner"></span> Loading risk metrics…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── AI CHAT PAGE ── -->
+      <div class="page" id="risk-page-chat">
+        <div class="chat-layout">
+          <div class="chat-main">
+            <div id="risk-chat-msgs"></div>
+            <div class="chat-input-bar">
+              <textarea id="risk-chat-input" placeholder="Ask about risk metrics…" onkeydown="handleRiskKey(event)"></textarea>
+              <button class="send-btn" id="risk-send-btn" onclick="sendRiskChat()">Send</button>
+            </div>
+          </div>
+          <div class="chat-sidebar">
+            <h4>Suggested Questions</h4>
+            <div id="risk-suggestions"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- mode-risk -->
+
+    <div class="mode-panel" id="mode-marketing">
+
+      <!-- ── ROI DASHBOARD PAGE ── -->
+      <div class="page active" id="marketing-page-dashboard">
+        <div class="dash-scroll">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+            <span style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Channel:</span>
+            <div id="marketing-source-pills" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+            <button class="btn-secondary" onclick="loadMarketingROI(true)" style="margin-left:auto">↺ Refresh</button>
+          </div>
+          <div id="marketing-kpis" class="kpi-grid"></div>
+          <div id="marketing-roi-table">
+            <div class="loading"><span class="spinner"></span> Loading ROI data…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── AI CHAT PAGE ── -->
+      <div class="page" id="marketing-page-chat">
+        <div class="chat-layout">
+          <div class="chat-main">
+            <div id="marketing-chat-msgs"></div>
+            <div class="chat-input-bar">
+              <textarea id="marketing-chat-input" placeholder="Ask about marketing ROI, channels, budget…" onkeydown="handleMarketingKey(event)"></textarea>
+              <button class="send-btn" id="marketing-send-btn" onclick="sendMarketingChat()">Send</button>
+            </div>
+          </div>
+          <div class="chat-sidebar">
+            <h4>Suggested Questions</h4>
+            <div id="marketing-suggestions"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div><!-- app-body -->
+</div><!-- app -->
+
+<div class="modal-backdrop" id="account-modal" onclick="if(event.target===this)closeAccountModal()">
+  <div class="account-modal">
+    <div class="modal-head">
+      <div class="modal-title">User cabinet</div>
+      <button class="modal-close" onclick="closeAccountModal()">×</button>
+    </div>
+    <div class="account-row">
+      <div class="account-label">Email</div>
+      <div class="account-value" id="account-email">-</div>
+    </div>
+    <form class="account-form" onsubmit="changePassword(event)">
+      <div class="account-label">Change password</div>
+      <input type="password" id="account-current-pw" placeholder="Current password" autocomplete="current-password">
+      <input type="password" id="account-new-pw" placeholder="New password" autocomplete="new-password">
+      <input type="password" id="account-new-pw2" placeholder="Confirm new password" autocomplete="new-password">
+      <div class="account-msg" id="account-msg"></div>
+      <button class="btn-primary" id="account-save-btn" type="submit">Update password</button>
+    </form>
+  </div>
+</div>
+
+<script>
+'use strict';
+const API = '';
+
+// ─── SUGGESTIONS ──────────────────────────────────────────────────────────────
+const SUGGESTIONS = {
+  first: [
+    'Which offer has the lowest first-payment SR?',
+    'Show me all active alerts',
+    'Compare banks by first-charge success rate',
+    'What is causing the SR drop this week?',
+    'Show CI chart for mobile payments',
+  ],
+  recurring: [
+    'Which offer has the worst renewal SR?',
+    'Compare geo regions by renewal SR',
+    'List all recurring payment alerts',
+    'What is the trend for 4-week renewals?',
+    'How does card type affect renewal success?',
+  ],
+  ltv: [
+    'Which offer has the highest LTV?',
+    'Compare LTV by geo region',
+    'What is the average churn rate?',
+    'Show LTV breakdown by payment method',
+    'Which customer segment has the best ARPPU?',
+  ],
+};
+
+function renderSuggestions(model) {
+  document.getElementById('suggestions-panel').innerHTML =
+    (SUGGESTIONS[model] || SUGGESTIONS.first)
+      .map(q => `<div class="suggestion" onclick="useSuggestion(this)">${q}</div>`)
+      .join('');
+}
+
+function useSuggestion(el) {
+  document.getElementById('chat-input').value = el.textContent;
+  sendChat();
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+let authToken = localStorage.getItem('auth_token') || '';
+let currentModel = 'first';
+let currentMode = 'interpreter';
+let userEmail = localStorage.getItem('auth_email') || '';
+
+function switchAuth(tab) {
+  ['login', 'register'].forEach(t => {
+    document.getElementById(`atab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`apanel-${t}`).style.display = t === tab ? '' : 'none';
+  });
+  document.getElementById('login-err').textContent = '';
+  document.getElementById('reg-err').textContent = '';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-err');
+  const btn   = document.getElementById('login-btn');
+  if (!email || !pw) { errEl.textContent = 'Please fill in all fields'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…'; errEl.textContent = '';
+  try {
+    const r = await fetch('/api/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pw }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Login failed');
+    onAuthSuccess(data.token, data.email);
+  } catch (e) {
+    errEl.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+}
+
+async function doRegister() {
+  const email = document.getElementById('reg-email').value.trim();
+  const pw    = document.getElementById('reg-pw').value;
+  const pw2   = document.getElementById('reg-pw2').value;
+  const errEl = document.getElementById('reg-err');
+  const btn   = document.getElementById('reg-btn');
+  if (!email || !pw) { errEl.textContent = 'Please fill in all fields'; return; }
+  if (pw !== pw2) { errEl.textContent = 'Passwords do not match'; return; }
+  if (pw.length < 8) { errEl.textContent = 'Password must be at least 8 characters'; return; }
+  btn.disabled = true; btn.textContent = 'Creating account…'; errEl.textContent = '';
+  try {
+    const r = await fetch('/api/auth/register', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pw }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Registration failed');
+    onAuthSuccess(data.token, data.email);
+  } catch (e) {
+    errEl.textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+}
+
+function onAuthSuccess(token, email) {
+  authToken = token; userEmail = email;
+  localStorage.setItem('auth_token', token);
+  localStorage.setItem('auth_email', email);
+  document.getElementById('auth-screen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
+  document.getElementById('user-chip').textContent = email;
+  document.getElementById('sidebar-user-email').textContent = email || 'Account';
+  document.getElementById('account-email').textContent = email || '-';
+  initApp();
+}
+
+function doLogout() {
+  authToken = ''; userEmail = '';
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('auth_email');
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  closeAccountModal();
+  ['first','recurring','ltv'].forEach(m => { chatHistories[m] = []; chatDomHistory[m] = ''; });
+  chatHistory = chatHistories[currentModel];
+  document.getElementById('messages').innerHTML = '';
+}
+
+function openAccountModal() {
+  document.getElementById('account-email').textContent = userEmail || '-';
+  document.getElementById('account-current-pw').value = '';
+  document.getElementById('account-new-pw').value = '';
+  document.getElementById('account-new-pw2').value = '';
+  const msg = document.getElementById('account-msg');
+  msg.textContent = '';
+  msg.className = 'account-msg';
+  document.getElementById('account-modal').classList.add('show');
+}
+
+function closeAccountModal() {
+  const modal = document.getElementById('account-modal');
+  if (modal) modal.classList.remove('show');
+}
+
+async function changePassword(event) {
+  event.preventDefault();
+  const current = document.getElementById('account-current-pw').value;
+  const next = document.getElementById('account-new-pw').value;
+  const next2 = document.getElementById('account-new-pw2').value;
+  const msg = document.getElementById('account-msg');
+  const btn = document.getElementById('account-save-btn');
+  msg.className = 'account-msg';
+  if (!current || !next || !next2) {
+    msg.textContent = 'Fill in all password fields';
+    msg.classList.add('error');
+    return;
+  }
+  if (next !== next2) {
+    msg.textContent = 'New passwords do not match';
+    msg.classList.add('error');
+    return;
+  }
+  if (next.length < 8) {
+    msg.textContent = 'New password must be at least 8 characters';
+    msg.classList.add('error');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Updating...';
+  try {
+    const r = await authFetch('/api/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ current_password: current, new_password: next }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.detail || 'Password update failed');
+    msg.textContent = 'Password updated';
+    msg.className = 'account-msg ok';
+    document.getElementById('account-current-pw').value = '';
+    document.getElementById('account-new-pw').value = '';
+    document.getElementById('account-new-pw2').value = '';
+  } catch (e) {
+    msg.textContent = e.message;
+    msg.className = 'account-msg error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Update password';
+  }
+}
+
+function authHeaders() {
+  return { 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' };
+}
+
+async function authFetch(url, opts = {}) {
+  opts.headers = { ...authHeaders(), ...(opts.headers || {}) };
+  const r = await fetch(url, opts);
+  if (r.status === 401) { doLogout(); throw new Error('Session expired — please sign in again'); }
+  return r;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function initApp() {
+  setMode('home');
+  loadOverview();
+  loadDimensions();
+  renderSuggestions('first');
+}
+
+// Auto-login if token exists
+if (authToken) {
+  onAuthSuccess(authToken, userEmail);
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('#mode-interpreter .page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  const tabs = document.querySelectorAll('#tab-bar-interpreter .tab');
+  const idx = ['dashboard', 'segments', 'chat'].indexOf(name);
+  tabs.forEach(t => t.classList.remove('active'));
+  if (tabs[idx]) tabs[idx].classList.add('active');
+}
+
+let riskMetricFilter = 'all';
+let paymentView = 'risk';
+
+function showMarketingSection(section) {
+  const tabs = document.querySelectorAll('#tab-bar-marketing .tab');
+  const idx = ['dashboard', 'chat'].indexOf(section);
+  tabs.forEach(t => t.classList.remove('active'));
+  if (tabs[idx]) tabs[idx].classList.add('active');
+  document.querySelectorAll('#mode-marketing .page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById(`marketing-page-${section}`);
+  if (pg) pg.classList.add('active');
+  if (section === 'chat') initMarketingChat();
+}
+let corLoaded = false;
+let ratioLoaded = false;
+function showRiskSection(section) {
+  const tabs = document.querySelectorAll('#tab-bar-risk .tab');
+  const idx = ['metrics', 'chat'].indexOf(section);
+  tabs.forEach(t => t.classList.remove('active'));
+  if (tabs[idx]) tabs[idx].classList.add('active');
+  document.querySelectorAll('#mode-risk .page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById(`risk-page-${section}`);
+  if (pg) pg.classList.add('active');
+  if (section === 'chat') initRiskChat();
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  updateSidebarActive();
+  document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`mode-${mode}`).classList.add('active');
+  // swap tab bars
+  document.getElementById('tab-bar-interpreter').style.display = mode === 'interpreter' ? '' : 'none';
+  document.getElementById('tab-bar-risk').style.display        = mode === 'risk'        ? '' : 'none';
+  document.getElementById('tab-bar-marketing').style.display   = mode === 'marketing'   ? '' : 'none';
+  // swap header controls
+  document.getElementById('hdr-model-wrap').style.display   = mode === 'interpreter' ? '' : 'none';
+  document.getElementById('hdr-segment-wrap').style.display = mode === 'risk'        ? '' : 'none';
+  if (mode === 'risk') {
+    if (paymentView === 'cor') initCoR();
+    else if (paymentView === 'revenue') initRevenue();
+    else if (paymentView === 'ratio') initRatio();
+    else initRisk();
+  } else if (mode === 'marketing') {
+    initMarketing();
+  }
+}
+
+function updateSidebarActive() {
+  document.querySelectorAll('.sidebar .nav-item').forEach(i => i.classList.remove('active'));
+  document.getElementById(`mode-btn-${currentMode}`)?.classList.add('active');
+  if (currentMode === 'interpreter') {
+    document.getElementById(`side-model-${currentModel}`)?.classList.add('active');
+  } else if (currentMode === 'risk') {
+    document.getElementById(`side-payment-${paymentView}`)?.classList.add('active');
+  } else if (currentMode === 'marketing') {
+    document.getElementById('side-marketing-roi')?.classList.add('active');
+  }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+// ─── MODEL SELECTOR ───────────────────────────────────────────────────────────
+const MODEL_LABELS = { first: 'SR First', recurring: 'SR Recurring', ltv: 'LTV' };
+
+function toggleModelMenu() {
+  const menu = document.getElementById('model-menu');
+  const btn  = document.getElementById('model-btn');
+  const open = menu.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.model-dd')) {
+    document.getElementById('model-menu').classList.remove('open');
+    document.getElementById('model-btn').classList.remove('open');
+    document.getElementById('payment-view-menu').classList.remove('open');
+    document.getElementById('payment-view-btn').classList.remove('open');
+  }
+});
+
+function togglePaymentViewMenu() {
+  const menu = document.getElementById('payment-view-menu');
+  const btn  = document.getElementById('payment-view-btn');
+  const open = menu.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+
+function setPaymentView(view) {
+  paymentView = view;
+  updateSidebarActive();
+  const isCoR = view === 'cor';
+  const isRevenue = view === 'revenue';
+  const isRatio = view === 'ratio';
+  document.getElementById('payment-view-label-text').textContent =
+    isCoR ? 'CoR' : isRevenue ? 'Revenue' : isRatio ? 'CoR / Revenue' : 'Risk Metrics';
+  document.querySelectorAll('#payment-view-menu .model-opt').forEach(o => o.classList.remove('active'));
+  document.getElementById(`payment-opt-${view}`).classList.add('active');
+  document.getElementById('payment-view-menu').classList.remove('open');
+  document.getElementById('payment-view-btn').classList.remove('open');
+
+  document.getElementById('risk-anomaly-banner').style.display = (isCoR || isRevenue || isRatio) ? 'none' : '';
+  document.getElementById('risk-controls').style.display = (isCoR || isRevenue || isRatio) ? 'none' : 'flex';
+  document.getElementById('cor-controls').style.display = isCoR ? 'flex' : 'none';
+  document.getElementById('revenue-controls').style.display = isRevenue ? 'flex' : 'none';
+  document.getElementById('ratio-controls').style.display = isRatio ? 'flex' : 'none';
+
+  if (isCoR) {
+    initCoR();
+  } else if (isRevenue) {
+    initRevenue();
+  } else if (isRatio) {
+    initRatio();
+  } else {
+    loadRiskTrends();
+    loadRiskAnomalies();
+  }
+  renderRiskSuggestions();
+}
+
+function setModel(model, opts = {}) {
+  if (model === currentModel && opts.source !== 'sidebar') {
+    toggleModelMenu();
+    return;
+  }
+  _switchChatModel(model);
+  currentModel = model;
+  updateSidebarActive();
+  document.getElementById('model-label-text').textContent = MODEL_LABELS[model];
+  document.querySelectorAll('#model-menu .model-opt').forEach(o => o.classList.remove('active'));
+  document.getElementById(`opt-${model}`).classList.add('active');
+  document.getElementById('model-menu').classList.remove('open');
+  document.getElementById('model-btn').classList.remove('open');
+  renderSuggestions(model);
+  document.getElementById('alert-banner').className = 'alert-banner';
+  // Hide Segments tab for LTV (not applicable)
+  const segTab = document.getElementById('tab-segments');
+  if (segTab) segTab.style.display = model === 'ltv' ? 'none' : '';
+  // If currently on segments page and switching to LTV — go to dashboard
+  if (model === 'ltv' && document.getElementById('page-segments')?.style.display !== 'none') {
+    showPage('dashboard');
+  }
+  if (model === 'ltv') {
+    document.getElementById('sr-section').style.display = 'none';
+    document.getElementById('ltv-section').style.display = '';
+    if (!ltvLoaded) { ltvLoaded = true; loadLTVOverview(); loadLTVSegment('offer'); }
+  } else {
+    document.getElementById('sr-section').style.display = '';
+    document.getElementById('ltv-section').style.display = 'none';
+    selectedSeg = null;
+    overviewData = [];
+    document.getElementById('chart-container').innerHTML =
+      '<div class="loading" style="color:var(--text3)">Select a segment above to view the SR chart</div>';
+    loadOverview();
+  }
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+let overviewData = [], selectedSeg = null, dateRange = 30;
+
+async function loadOverview() {
+  document.getElementById('overview-grid').innerHTML = '<div class="loading"><span class="spinner"></span> Loading segments…</div>';
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    const r = await authFetch(API + `/api/dashboard/overview?model=${currentModel}`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!r.ok) throw new Error(await r.text());
+    const data = await r.json();
+    overviewData = Array.isArray(data) ? data : (data.segments ?? []);
+    renderGrid();
+    const alerts = overviewData.filter(s => s.is_alert);
+    const banner = document.getElementById('alert-banner');
+    if (alerts.length) {
+      banner.className = 'alert-banner show';
+      banner.innerHTML = `⚠ ${alerts.length} segment${alerts.length > 1 ? 's are' : ' is'} alerting: ${alerts.map(a => `<b>${escapeHtml(formatSegmentLabel(a))}</b>`).join(', ')}`;
+    } else {
+      banner.className = 'alert-banner';
+    }
+  } catch (e) {
+    if (currentModel === 'first') {
+      document.getElementById('overview-grid').innerHTML = `
+        <div class="loading" style="grid-column:1/-1;align-items:flex-start;flex-direction:column;gap:10px;color:var(--text2)">
+          <div><span class="spinner"></span> Rebuilding SR First with decline categories…</div>
+          <div style="font-size:12px;color:var(--text3);line-height:1.5">
+            The old SR First cache was removed because it did not contain decline breakdowns.
+            The new data is being rebuilt from raw transactions and will appear here when ready.
+          </div>
+          <button class="btn-secondary" onclick="setModel('recurring', { source: 'sidebar' })">Open SR Recurring</button>
+        </div>`;
+      return;
+    }
+    document.getElementById('overview-grid').innerHTML = `<div class="loading" style="color:var(--danger)">Error: ${e.message}</div>`;
+  }
+}
+
+function setRange(n, btn) {
+  dateRange = n;
+  document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('range-label').textContent = n ? `Last ${n} days` : '';
+  if (selectedSeg) {
+    const seg = overviewData.find(s => s.dimension === selectedSeg.dim && s.value === selectedSeg.val);
+    if (seg) drawChart(seg);
+  }
+}
+
+function filterDays(daily) {
+  if (!dateRange || !daily) return daily;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - dateRange);
+  return daily.filter(d => new Date(d.date) >= cutoff);
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch]));
+}
+
+function labelizeKey(key) {
+  const labels = {
+    mid: 'MID',
+    utm_source: 'UTM Source',
+    payment_method: 'Payment method',
+    card_brand: 'Card brand',
+    card_type: 'Card type',
+  };
+  if (labels[key]) return labels[key];
+  return String(key || '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, ch => ch.toUpperCase());
+}
+
+function labelizeValue(value) {
+  const labels = {
+    applepay: 'Apple Pay',
+    googlepay: 'Google Pay',
+    card: 'Card',
+    visa: 'Visa',
+    mastercard: 'Mastercard',
+    facebook: 'Facebook',
+    google: 'Google',
+    checkout: 'Checkout',
+    adyen: 'Adyen',
+    adyen_us: 'Adyen US',
+  };
+  if (labels[value]) return labels[value];
+  return String(value || '');
+}
+
+function formatSegmentName(seg) {
+  if (seg.dimension !== 'combo') return escapeHtml(labelizeValue(seg.value));
+  return String(seg.value || '').split('&').map(part => {
+    const [rawKey, ...rawVal] = part.split('=');
+    const key = labelizeKey(rawKey);
+    const val = labelizeValue(rawVal.join('=') || '');
+    return `<span class="seg-name-line"><span class="seg-name-k">${escapeHtml(key)}:</span><span class="seg-name-v">${escapeHtml(val)}</span></span>`;
+  }).join('');
+}
+
+function formatSegmentLabel(seg) {
+  if (seg.dimension !== 'combo') return `${labelizeKey(seg.dimension)}: ${labelizeValue(seg.value)}`;
+  return String(seg.value || '').split('&').map(part => {
+    const [rawKey, ...rawVal] = part.split('=');
+    return `${labelizeKey(rawKey)}: ${labelizeValue(rawVal.join('=') || '')}`;
+  }).join(' / ');
+}
+
+function segmentGroupTitle(dimension) {
+  if (dimension === 'combo') return 'Subsegments';
+  return labelizeKey(dimension);
+}
+
+function segmentGroupRank(dimension) {
+  const order = {
+    mid: 1,
+    offer: 2,
+    utm_source: 3,
+    combo: 4,
+  };
+  return order[dimension] || 99;
+}
+
+function renderSegmentCard(seg) {
+  const last = seg.daily?.[seg.daily.length - 1];
+  const sr   = last ? (last.actual_sr * 100).toFixed(1) + '%' : '—';
+  const ci   = last ? `CI [${(last.ci_low * 100).toFixed(1)}%–${(last.ci_high * 100).toFixed(1)}%]` : '';
+  const badge = seg.is_alert
+    ? '<span class="badge badge-alert">ALERT</span>'
+    : '<span class="badge badge-ok">OK</span>';
+  return `<div class="seg-card${seg.is_alert ? ' alert' : ''}" onclick="selectSeg('${seg.dimension}','${seg.value}',this)">
+    <div class="seg-top"><span class="seg-name${seg.dimension === 'combo' ? ' combo' : ''}">${formatSegmentName(seg)}</span>${badge}</div>
+    <div class="seg-dim">${escapeHtml(labelizeKey(seg.dimension))}</div>
+    <div class="seg-sr">${sr}</div>
+    <div class="seg-ci">${ci}</div>
+  </div>`;
+}
+
+function renderGrid() {
+  if (!overviewData.length) {
+    document.getElementById('overview-grid').innerHTML = '<div class="loading" style="color:var(--text3)">No data available</div>';
+    return;
+  }
+  const groups = overviewData.reduce((acc, seg) => {
+    (acc[seg.dimension] ||= []).push(seg);
+    return acc;
+  }, {});
+
+  document.getElementById('overview-grid').innerHTML = Object.entries(groups)
+    .sort(([a], [b]) => segmentGroupRank(a) - segmentGroupRank(b) || segmentGroupTitle(a).localeCompare(segmentGroupTitle(b)))
+    .map(([dimension, segments]) => `
+      <div class="segment-group-head">
+        <span class="segment-group-title">${escapeHtml(segmentGroupTitle(dimension))}</span>
+        <span class="segment-group-count">${segments.length} segment${segments.length === 1 ? '' : 's'}</span>
+      </div>
+      ${segments.map(renderSegmentCard).join('')}
+    `).join('');
+}
+
+function selectSeg(dim, val, el) {
+  selectedSeg = { dim, val };
+  document.querySelectorAll('.seg-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  const seg = overviewData.find(s => s.dimension === dim && s.value === val);
+  if (seg) drawChart(seg);
+}
+
+const DECLINE_COLORS = {
+  INSUFFICIENT_FUNDS: 'rgba(245,158,11,0.78)',
+  FRAUD_RISK:         'rgba(239,68,68,0.78)',
+  DO_NOT_HONOR:       'rgba(168,85,247,0.78)',
+  CARD_ISSUE:         'rgba(59,130,246,0.75)',
+  BANK_DECLINE:       'rgba(236,72,153,0.75)',
+  TECH_ERROR:         'rgba(6,182,212,0.75)',
+  OTHER:              'rgba(148,163,184,0.65)',
+};
+const DECLINE_LABELS = {
+  INSUFFICIENT_FUNDS: 'Insufficient Funds',
+  FRAUD_RISK:         'Fraud / Risk',
+  DO_NOT_HONOR:       'Do Not Honor',
+  CARD_ISSUE:         'Card Issue',
+  BANK_DECLINE:       'Bank Decline',
+  TECH_ERROR:         'Tech Error',
+  OTHER:              'Other',
+};
+
+function buildDeclineTraces(daily) {
+  const categories = [...new Set(
+    daily.flatMap(day => (day.declines || []).map(item => item.category))
+  )];
+  const dates = daily.map(d => d.date);
+  if (!categories.length) {
+    return [{
+      x: dates,
+      y: daily.map(day => {
+        if (day.decline_count && day.count) return day.decline_count / day.count;
+        return day.actual_sr == null ? 0 : Math.max(0, 1 - day.actual_sr);
+      }),
+      type: 'bar',
+      name: 'Total declines',
+      marker: { color: 'rgba(245,158,11,0.65)' },
+      xaxis: 'x2',
+      yaxis: 'y2',
+      hovertemplate: '<b>Total declines</b><br>%{x}<br>%{y:.1%} of attempts<extra></extra>',
+    }];
+  }
+  const ORDER = ['INSUFFICIENT_FUNDS','FRAUD_RISK','DO_NOT_HONOR','CARD_ISSUE','BANK_DECLINE','TECH_ERROR','OTHER'];
+  const sorted = [...categories].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
+  return sorted.map(cat => ({
+    x: dates,
+    y: daily.map(day => {
+      const item = (day.declines || []).find(d => d.category === cat);
+      return item ? item.share_of_attempts : 0;
+    }),
+    type: 'bar',
+    name: DECLINE_LABELS[cat] || cat,
+    marker: { color: DECLINE_COLORS[cat] || 'rgba(148,163,184,0.65)' },
+    xaxis: 'x2',
+    yaxis: 'y2',
+    hovertemplate: `<b>${DECLINE_LABELS[cat] || cat}</b><br>%{x}<br>%{y:.1%} of attempts<extra></extra>`,
+  }));
+}
+
+function makeChartLayout(title, hasCategories) {
+  return {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: { color: '#94a3b8', family: 'Inter,sans-serif', size: 12 },
+    title: { text: title, font: { color: '#f1f5f9', size: 14 } },
+    xaxis:  { domain: [0, 1], anchor: 'y',  gridcolor: 'rgba(255,255,255,0.05)', linecolor: 'rgba(255,255,255,0.08)', showticklabels: false },
+    yaxis:  { domain: [0.38, 1], gridcolor: 'rgba(255,255,255,0.05)', linecolor: 'rgba(255,255,255,0.08)', tickformat: '.1%', title: 'SR' },
+    xaxis2: { domain: [0, 1], anchor: 'y2', matches: 'x', gridcolor: 'rgba(255,255,255,0.04)', linecolor: 'rgba(255,255,255,0.08)', tickangle: -30 },
+    yaxis2: { domain: [0, 0.30], gridcolor: 'rgba(255,255,255,0.05)', linecolor: 'rgba(255,255,255,0.08)', tickformat: '.1%', title: 'Declines share' },
+    legend: hasCategories
+      ? { bgcolor: 'rgba(15,23,42,0.6)', font: { size: 10 }, orientation: 'v', x: 1.01, xanchor: 'left', y: 1, tracegroupgap: 4 }
+      : { bgcolor: 'transparent', font: { size: 11 }, orientation: 'h', y: -0.18 },
+    barmode: 'stack',
+    margin: hasCategories ? { t: 42, b: 70, l: 60, r: 140 } : { t: 42, b: 90, l: 64, r: 20 },
+    height: 520,
+    hovermode: 'x unified',
+  };
+}
+
+function drawChart(seg) {
+  const el    = document.getElementById('chart-container');
+  const daily = filterDays(seg.daily);
+  if (!daily || !daily.length) { el.innerHTML = '<div class="loading" style="color:var(--text3)">No data for this range</div>'; return; }
+  el.innerHTML = '';
+  const dates  = daily.map(d => d.date);
+  const declineTraces = buildDeclineTraces(daily);
+  const hasCategories = declineTraces.length > 1 || (declineTraces[0] && declineTraces[0].name !== 'Total declines');
+  const traces = [
+    {
+      x: [...dates, ...dates.slice().reverse()],
+      y: [...daily.map(d => d.ci_high), ...daily.slice().reverse().map(d => d.ci_low)],
+      fill: 'toself', fillcolor: 'rgba(6,182,212,0.1)',
+      line: { color: 'transparent' }, name: 'CI 90%', hoverinfo: 'skip',
+    },
+    { x: dates, y: daily.map(d => d.mean), line: { color: '#06b6d4', dash: 'dash', width: 1.5 }, name: 'Bayesian Mean' },
+    { x: dates, y: daily.map(d => d.actual_sr), line: { color: '#f87171', width: 2 }, mode: 'lines+markers', marker: { size: 5 }, name: 'Actual SR' },
+    ...declineTraces,
+  ];
+  Plotly.newPlot(el, traces, makeChartLayout(formatSegmentLabel(seg), hasCategories), { responsive: true, displayModeBar: false });
+}
+
+// Poll every 3 minutes
+setInterval(() => { if (authToken && currentModel !== 'ltv') loadOverview(); }, 180_000);
+
+// ─── SEGMENTS ─────────────────────────────────────────────────────────────────
+let dimData = {};
+
+async function loadDimensions() {
+  try {
+    const r = await authFetch(API + `/api/segments/dimensions?model=${currentModel}`);
+    if (!r.ok) throw new Error(await r.text());
+    dimData = (await r.json()).categories || {};
+    renderFilters();
+  } catch (e) {
+    document.getElementById('filter-grid').innerHTML = `<div style="color:var(--danger);font-size:13px">Error: ${e.message}</div>`;
+  }
+}
+
+function renderFilters() {
+  const dims = Object.keys(dimData);
+  if (!dims.length) { document.getElementById('filter-grid').innerHTML = '<div style="color:var(--text3);font-size:13px">No dimensions available</div>'; return; }
+  document.getElementById('filter-grid').innerHTML = dims.map(dim => `
+    <div class="flt-group">
+      <label>${dim}</label>
+      <select id="flt-${dim}">
+        <option value="">— Any —</option>
+        ${(dimData[dim] || []).map(v => `<option>${v}</option>`).join('')}
+      </select>
+    </div>`).join('');
+}
+
+async function applySegment() {
+  const filters = {};
+  Object.keys(dimData).forEach(dim => {
+    const v = document.getElementById(`flt-${dim}`)?.value;
+    if (v) filters[dim] = v;
+  });
+  const el = document.getElementById('seg-result');
+  if (!Object.keys(filters).length) {
+    el.innerHTML = '<div class="loading" style="color:var(--text3)">Select at least one dimension</div>';
+    return;
+  }
+  el.innerHTML = '<div class="loading"><span class="spinner"></span> Computing…</div>';
+  try {
+    const keys = Object.keys(filters);
+    let r;
+    if (keys.length === 1) {
+      r = await authFetch(`${API}/api/segments/sr?dimension=${keys[0]}&value=${encodeURIComponent(filters[keys[0]])}&model=${currentModel}`);
+    } else {
+      r = await authFetch(`${API}/api/segments/sr/combo`, {
+        method: 'POST',
+        body: JSON.stringify({ filters, model: currentModel }),
+      });
+    }
+    if (!r.ok) throw new Error(await r.text());
+    renderSegResult(await r.json(), el);
+  } catch (e) {
+    el.innerHTML = `<div class="loading" style="color:var(--danger)">Error: ${e.message}</div>`;
+  }
+}
+
+function renderSegResult(seg, el) {
+  if (!seg || !seg.daily || !seg.daily.length) {
+    el.innerHTML = '<div class="loading" style="color:var(--text3)">No data for this segment</div>';
+    return;
+  }
+  el.innerHTML = '<div id="seg-chart"></div>';
+  const daily  = seg.daily;
+  const dates  = daily.map(d => d.date);
+  const last   = daily[daily.length - 1];
+  const declineTraces = buildDeclineTraces(daily);
+  const hasCategories = declineTraces.length > 1 || (declineTraces[0] && declineTraces[0].name !== 'Total declines');
+  const traces = [
+    {
+      x: [...dates, ...dates.slice().reverse()],
+      y: [...daily.map(d => d.ci_high), ...daily.slice().reverse().map(d => d.ci_low)],
+      fill: 'toself', fillcolor: 'rgba(6,182,212,0.1)',
+      line: { color: 'transparent' }, name: 'CI 90%', hoverinfo: 'skip',
+    },
+    { x: dates, y: daily.map(d => d.mean), line: { color: '#06b6d4', dash: 'dash', width: 1.5 }, name: 'Bayesian Mean' },
+    { x: dates, y: daily.map(d => d.actual_sr), line: { color: '#f87171', width: 2 }, mode: 'lines+markers', marker: { size: 5 }, name: 'Actual SR' },
+    ...declineTraces,
+  ];
+  const title = `${formatSegmentLabel(seg)} — SR ${(last.actual_sr * 100).toFixed(1)}%${seg.is_alert ? ' ⚠ ALERT' : ''}`;
+  Plotly.newPlot('seg-chart', traces, makeChartLayout(title, hasCategories), { responsive: true, displayModeBar: false });
+}
+
+function resetSegment() {
+  document.querySelectorAll('#filter-grid select').forEach(s => s.value = '');
+  document.getElementById('seg-result').innerHTML = '<div class="loading" style="color:var(--text3)">Configure filters above and click Analyze</div>';
+}
+
+// ─── MARKETING ADVISER ───────────────────────────────────────────────────────
+let marketingLoaded = false;
+let marketingActiveSource = '';
+
+const ROI_METRICS = [
+  ['spend', 'Spend', 'money'],
+  ['roi_new', 'ROI new', 'pct'],
+  ['roi_ml_fast', 'ROI ml fast', 'pct'],
+  ['roi_ml', 'ROI ml', 'pct'],
+  ['cac', 'CAC', 'money'],
+  ['gp', 'GP', 'money'],
+  ['first_pay_sr', 'First pay SR', 'pct'],
+  ['purch_otp', 'Purch / TTP', 'pct'],
+  ['purch_land', 'Purch / Landing', 'pct'],
+  ['upsell_cnt', 'Upsell count', 'num'],
+  ['upsell_rate', 'Upsell rate', 'pct'],
+  ['chase_rate', 'Chase rate', 'pct'],
+  ['em_ratio', 'Email ratio', 'pct'],
+  ['age18_24_ratio', '18-24 purch', 'pct'],
+  ['week_ratio', '1Week ratio', 'pct'],
+  ['ww_ratio', 'WW ratio', 'pct'],
+  ['cpm', 'CPM', 'money'],
+  ['ctr', 'CTR', 'pct'],
+];
+
+function renderSourcePills(sources) {
+  const container = document.getElementById('marketing-source-pills');
+  const all = ['', ...sources];
+  container.innerHTML = all.map(s => {
+    const label = s === '' ? 'All' : labelizeValue(s);
+    const active = s === marketingActiveSource ? ' active' : '';
+    return `<button class="src-pill${active}" onclick="selectMarketingSource('${escapeHtml(s)}')">${escapeHtml(label)}</button>`;
+  }).join('');
+}
+
+function selectMarketingSource(source) {
+  marketingActiveSource = source;
+  renderSourcePills(_marketingSources);
+  loadMarketingROI();
+}
+
+let _marketingSources = [];
+
+async function initMarketing() {
+  if (marketingLoaded) {
+    loadMarketingROI();
+    return;
+  }
+  marketingLoaded = true;
+  renderSourcePills([]);
+  try {
+    const r = await authFetch(API + '/api/marketing/sources');
+    if (r.ok) {
+      _marketingSources = await r.json();
+      renderSourcePills(_marketingSources);
+    }
+  } catch (_) {
+    renderSourcePills([]);
+  }
+  loadMarketingROI();
+}
+
+function formatROIValue(value, type) {
+  const v = Number(value || 0);
+  if (type === 'money') return '$' + v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  if (type === 'pct') return (v * 100).toFixed(2) + '%';
+  return v.toLocaleString(undefined, { maximumFractionDigits: 0 });
+}
+
+function roiCellClass(metric, value) {
+  const v = Number(value || 0);
+  if (metric.startsWith('roi')) return v < 0 ? 'bad' : v >= 0.3 ? 'good' : 'mid';
+  if (metric === 'gp') return v < 0 ? 'bad' : v >= 0 ? 'good' : 'mid';
+  if (metric === 'cac') return v > 55 ? 'bad' : v < 35 ? 'good' : 'mid';
+  if (metric === 'spend') return 'neutral';
+  if (metric === 'ctr' || metric.includes('rate') || metric.includes('ratio') || metric === 'first_pay_sr' || metric === 'purch_otp' || metric === 'purch_land') {
+    return v >= 0.25 ? 'good' : v >= 0.08 ? 'mid' : 'neutral';
+  }
+  return 'neutral';
+}
+
+async function loadMarketingROI(force = false) {
+  const source = marketingActiveSource;
+  const table = document.getElementById('marketing-roi-table');
+  table.innerHTML = '<div class="loading"><span class="spinner"></span> Loading ROI data…</div>';
+  try {
+    const url = API + '/api/marketing/roi' + (source ? `?source=${encodeURIComponent(source)}` : '');
+    const r = await authFetch(url);
+    if (!r.ok) throw new Error(await r.text());
+    const rows = await r.json();
+    renderMarketingROI(rows);
+  } catch (e) {
+    table.innerHTML = `<div class="loading" style="color:var(--danger)">Marketing ROI error: ${e.message}</div>`;
+  }
+}
+
+function renderMarketingROI(rows) {
+  const table = document.getElementById('marketing-roi-table');
+  if (!rows || !rows.length) {
+    table.innerHTML = '<div class="loading" style="color:var(--text3)">No ROI data</div>';
+    document.getElementById('marketing-kpis').innerHTML = '';
+    return;
+  }
+  const dates = [...new Set(rows.map(r => r.date))].sort();
+  const totals = dates.map(date => {
+    // For "All channels" only aggregate paid sources (spend > 0).
+    // Organic/unattributed rows have spend=0 but positive LTV which distorts ROI.
+    const allDay = rows.filter(r => r.date === date);
+    const day = marketingActiveSource
+      ? allDay
+      : allDay.filter(r => Number(r.spend || 0) > 0);
+    if (!day.length) return null;
+    const sum = key => day.reduce((acc, r) => acc + Number(r[key] || 0), 0);
+    const spend = sum('spend');
+    const purch = sum('purch_count');
+    return {
+      date,
+      spend,
+      roi_new:     spend ? (sum('ltv_neww')    - spend) / spend : 0,
+      roi_ml_fast: spend ? (sum('ltv_ml_fast') - spend) / spend : 0,
+      roi_ml:      spend ? (sum('ltv_ml')      - spend) / spend : 0,
+      cac:         purch ? spend / purch : 0,
+      gp:          sum('ltv_ml_fast') - spend,
+      first_pay_sr: sum('ttp_cnt') ? purch / sum('ttp_cnt') : 0,
+      purch_otp:   sum('pw_cnt')   ? sum('ttp_cnt') / sum('pw_cnt') : 0,
+      purch_land:  sum('lv_cnt')   ? purch / sum('lv_cnt') : 0,
+      upsell_cnt:  sum('upsell_cnt'),
+      upsell_rate: purch ? sum('upsell_cnt') / purch : 0,
+      chase_rate:  sum('sub_cnt')  ? sum('chase_cnt') / sum('sub_cnt') : 0,
+      em_ratio:    sum('sub_cnt')  ? sum('em_sub')    / sum('sub_cnt') : 0,
+      age18_24_ratio: purch ? sum('age18_24_purch') / purch : 0,
+      week_ratio:  purch ? sum('week1_purch') / purch : 0,
+      ww_ratio:    purch ? sum('ww_purch')    / purch : 0,
+      cpm:         sum('impressions') ? spend / sum('impressions') * 1000 : 0,
+      ctr:         sum('impressions') ? sum('click') / sum('impressions') : 0,
+    };
+  }).filter(Boolean);
+  const latest = totals[totals.length - 1] || {};
+  document.getElementById('marketing-kpis').innerHTML = [
+    ['Spend', formatROIValue(latest.spend, 'money')],
+    ['ROI (ML)', formatROIValue(latest.roi_ml_fast, 'pct')],
+    ['CAC', formatROIValue(latest.cac, 'money')],
+    ['GP (ML)', formatROIValue(latest.gp, 'money')],
+  ].map(k => `<div class="kpi-card"><div class="kpi-lbl">${k[0]}</div><div class="kpi-val">${k[1]}</div></div>`).join('');
+
+  const sourceLabel = marketingActiveSource ? labelizeValue(marketingActiveSource) : 'All channels';
+  table.innerHTML = `<div class="roi-table-wrap"><table class="roi-table">
+    <thead><tr><th>${escapeHtml(sourceLabel)}</th>${dates.map(d => `<th>${escapeHtml(d.slice(5))}</th>`).join('')}</tr></thead>
+    <tbody>
+      ${ROI_METRICS.map(([metric, label, type]) => `
+        <tr>
+          <td>${escapeHtml(label)}</td>
+          ${totals.map(row => `<td class="roi-cell ${roiCellClass(metric, row[metric])}">${formatROIValue(row[metric], type)}</td>`).join('')}
+        </tr>
+      `).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+// ─── CHAT ─────────────────────────────────────────────────────────────────────
+const chatHistories  = { first: [], recurring: [], ltv: [] };
+const chatDomHistory = { first: '', recurring: '', ltv: '' };
+let chatHistory = chatHistories['first'];
+
+function _switchChatModel(newModel) {
+  const msgsEl = document.getElementById('messages');
+  // save current model state
+  chatHistories[currentModel]  = chatHistory;
+  chatDomHistory[currentModel] = msgsEl.innerHTML;
+  // restore new model state
+  chatHistory  = chatHistories[newModel] || [];
+  msgsEl.innerHTML = chatDomHistory[newModel] || '';
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function renderMarkdownWithMath(text, el) {
+  const mathBlocks = [];
+  let safeText = text
+    .replace(/\$\$[\s\S]+?\$\$/g, m => { mathBlocks.push({ src: m.slice(2, -2), display: true });  return `\x00MATH${mathBlocks.length - 1}\x00`; })
+    .replace(/\$[^\n$]+?\$/g,     m => { mathBlocks.push({ src: m.slice(1, -1), display: false }); return `\x00MATH${mathBlocks.length - 1}\x00`; });
+  let html = marked.parse(safeText);
+  html = html.replace(/\x00MATH(\d+)\x00/g, (_, i) => {
+    const { src, display } = mathBlocks[+i];
+    try { return katex.renderToString(src, { displayMode: display, throwOnError: false }); }
+    catch { return src; }
+  });
+  el.innerHTML = html;
+}
+
+function renderPlotTags(msgEl, text) {
+  const re = /<plot>([\s\S]*?)<\/plot>/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    try {
+      const spec = JSON.parse(m[1]);
+      const c = document.createElement('div'); c.className = 'plotly-embed';
+      msgEl.appendChild(c);
+      Plotly.newPlot(c, spec.traces || [], normalizePlotLayout(spec.layout || {}), { responsive: true, displayModeBar: false });
+    } catch (e) {}
+  }
+}
+
+function normalizePlotLayout(layout = {}, opts = {}) {
+  const isRisk = opts.kind === 'risk';
+  const minHeight = isRisk ? 560 : 460;
+  const sourceHeight = Number(layout.height || 0);
+  const margin = {
+    t: 52,
+    b: isRisk ? 128 : 96,
+    l: 68,
+    r: isRisk ? 36 : 28,
+    ...(layout.margin || {}),
+  };
+  margin.b = Math.max(margin.b || 0, isRisk ? 128 : 96);
+  margin.t = Math.max(margin.t || 0, 48);
+
+  const normalized = {
+    ...layout,
+    autosize: false,
+    height: Math.max(sourceHeight, minHeight),
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    font: { color: '#94a3b8', family: 'Inter,sans-serif', size: 12, ...(layout.font || {}) },
+    margin,
+    legend: {
+      bgcolor: 'transparent',
+      orientation: 'h',
+      x: 0,
+      xanchor: 'left',
+      y: -0.26,
+      yanchor: 'top',
+      font: { size: 11 },
+      ...(layout.legend || {}),
+    },
+    xaxis: { automargin: true, ...(layout.xaxis || {}) },
+    yaxis: { automargin: true, ...(layout.yaxis || {}) },
+    hovermode: layout.hovermode || 'x unified',
+  };
+
+  Object.keys(layout).forEach(key => {
+    if (/^[xy]axis\d+$/.test(key) && layout[key]) {
+      normalized[key] = { automargin: true, ...layout[key] };
+    }
+  });
+
+  Object.keys(normalized).forEach(key => {
+    if (normalized[key] === undefined) delete normalized[key];
+  });
+
+  return normalized;
+}
+
+function getPlotPayload(result) {
+  if (result?.plotly?.data) {
+    return {
+      data: result.plotly.data,
+      layout: result.plotly.layout || result.layout || {},
+    };
+  }
+  if (result?.plotly_traces) {
+    return {
+      data: result.plotly_traces,
+      layout: result.plotly_layout || result.layout || {},
+      kind: 'risk',
+    };
+  }
+  return {
+    data: result?.plotly || result?.traces || [],
+    layout: result?.layout || {},
+  };
+}
+
+function renderPlotlySpec(result, afterEl) {
+  const c = document.createElement('div'); c.className = 'plotly-embed';
+  if (afterEl) afterEl.after(c); else document.getElementById('messages').appendChild(c);
+  const payload = getPlotPayload(result);
+  if (payload.kind === 'risk') c.classList.add('risk-plotly');
+  const layout = normalizePlotLayout(payload.layout, { kind: payload.kind });
+  Plotly.newPlot(c, payload.data, layout, { responsive: true, displayModeBar: false });
+}
+
+function renderInlineChart(result, afterEl) {
+  const payload = getPlotPayload(result);
+  if (!payload.data?.length) return;
+  const c = document.createElement('div'); c.className = 'plotly-embed';
+  if (payload.kind === 'risk') c.classList.add('risk-plotly');
+  if (afterEl) afterEl.after(c); else document.getElementById('messages').appendChild(c);
+  Plotly.newPlot(c, payload.data, normalizePlotLayout(payload.layout, { kind: payload.kind }), { responsive: true, displayModeBar: false });
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text  = input.value.trim(); if (!text) return;
+  input.value = '';
+  document.getElementById('send-btn').disabled = true;
+  chatHistory.push({ role: 'user', content: text });
+  appendMsg('user', text);
+
+  const typingEl = document.createElement('div');
+  typingEl.className = 'typing';
+  typingEl.innerHTML = '<span class="spinner"></span> Thinking…';
+  document.getElementById('messages').appendChild(typingEl);
+  scrollBottom();
+
+  let assistantText = '', dataToolsCalled = [];
+  try {
+    const resp = await fetch(API + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ messages: chatHistory, model: currentModel }),
+    });
+    if (!resp.ok) {
+      let detail = ''; try { detail = (await resp.json()).detail ?? ''; } catch (_) { try { detail = await resp.text(); } catch (_) {} }
+      throw new Error(detail || `HTTP ${resp.status}`);
+    }
+    const reader = resp.body.getReader();
+    const dec    = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (!raw || raw === '[DONE]') continue;
+        let evt; try { evt = JSON.parse(raw); } catch { continue; }
+        if (evt.type === 'text_delta') {
+          assistantText += evt.data;
+        } else if (evt.type === 'tool_start') {
+          const toolName = evt.data?.tool ?? evt.data;
+          typingEl.before(appendMsgDetached('tool', `🔧 ${toolName}…`));
+          if (['get_segment_sr', 'compare_segments', 'get_top_performing', 'list_alerts'].includes(toolName)) dataToolsCalled.push(toolName);
+        } else if (evt.type === 'tool_result') {
+          const toolName  = evt.data?.tool ?? '';
+          const result    = evt.data?.result;
+          const rs        = JSON.stringify(result) ?? '';
+          const lastTools = document.getElementById('messages').querySelectorAll('.msg.tool');
+          if (lastTools.length) lastTools[lastTools.length - 1].querySelector('.msg-body').textContent = `✅ ${toolName} — ${rs.slice(0, 150)}${rs.length > 150 ? '…' : ''}`;
+          if (result && (result.plotly || result.traces || result.plotly_traces)) {
+            const payload = getPlotPayload(result);
+            const c = document.createElement('div'); c.className = 'plotly-embed';
+            if (payload.kind === 'risk') c.classList.add('risk-plotly');
+            typingEl.before(c);
+            const layout = normalizePlotLayout(payload.layout, { kind: payload.kind });
+            Plotly.newPlot(c, payload.data, layout, { responsive: true, displayModeBar: false });
+          }
+        } else if (evt.type === 'done') {
+          typingEl.remove();
+          if (assistantText) {
+            chatHistory.push({ role: 'assistant', content: assistantText });
+            const assistantEl = appendMsg('assistant', '');
+            const b = assistantEl.querySelector('.msg-body');
+            renderMarkdownWithMath(assistantText, b);
+            renderPlotTags(assistantEl, assistantText);
+            if (dataToolsCalled.length > 0 && !assistantText.includes('<plot>')) {
+              const btn = document.createElement('button');
+              btn.textContent = '📊 Show chart'; btn.className = 'btn-secondary';
+              btn.style.cssText = 'margin-top:8px;font-size:12px;padding:5px 14px;';
+              btn.onclick = () => { btn.remove(); document.getElementById('chat-input').value = 'Show the data from your last response as a chart'; sendChat(); };
+              assistantEl.appendChild(btn);
+            }
+          }
+          scrollBottom();
+        } else if (evt.type === 'error') {
+          typingEl.remove();
+          appendMsg('tool', `❌ Error: ${evt.data?.message ?? evt.data}`);
+        }
+      }
+    }
+  } catch (e) { typingEl.remove(); appendMsg('tool', `❌ ${e.message}`); }
+  document.getElementById('send-btn').disabled = false;
+  scrollBottom();
+}
+
+function appendMsgDetached(role, text) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `<div class="msg-role">${role === 'tool' ? 'Tool' : role === 'user' ? 'You' : 'AI'}</div><div class="msg-body">${text}</div>`;
+  return div;
+}
+
+function appendMsg(role, text) {
+  const div = appendMsgDetached(role, text);
+  document.getElementById('messages').appendChild(div);
+  scrollBottom();
+  return div;
+}
+
+function scrollBottom() {
+  const m = document.getElementById('messages'); m.scrollTop = m.scrollHeight;
+}
+
+// ─── LTV ──────────────────────────────────────────────────────────────────────
+let ltvCurrentDim = 'offer', ltvLoaded = false;
+
+async function loadLTVOverview() {
+  try {
+    const r = await authFetch(API + '/api/ltv/overview');
+    if (!r.ok) throw new Error(await r.text());
+    renderLTVKPIs(await r.json());
+  } catch (e) {
+    document.getElementById('ltv-kpis').innerHTML = `<div style="color:var(--danger);padding:16px">LTV error: ${e.message}</div>`;
+  }
+}
+
+function renderLTVKPIs(data) {
+  const fmt  = v => v == null ? '—' : '$' + (+v).toFixed(2);
+  const fmtP = v => v == null ? '—' : (v * 100).toFixed(1) + '%';
+  const fmtN = v => v == null ? '—' : (+v).toLocaleString();
+  document.getElementById('ltv-kpis').innerHTML = [
+    { label: 'Avg LTV',       value: fmt(data.avg_ltv) },
+    { label: 'Avg ARPPU',     value: fmt(data.avg_arppu) },
+    { label: 'Recurring LTV', value: fmt(data.avg_ltv_recurring) },
+    { label: 'Churn Rate',    value: fmtP(data.churn_rate) },
+    { label: 'Customers',     value: fmtN(data.customer_count) },
+  ].map(k => `<div class="kpi-card"><div class="kpi-lbl">${k.label}</div><div class="kpi-val">${k.value}</div></div>`).join('');
+}
+
+async function loadLTVSegment(dimension) {
+  ltvCurrentDim = dimension;
+  const el = document.getElementById('ltv-chart-main');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span> Computing LTV by segment…</div>';
+  try {
+    const r = await authFetch(API + `/api/ltv/by-segment?dimension=${encodeURIComponent(dimension)}`);
+    if (!r.ok) throw new Error(await r.text());
+    renderLTVChart(await r.json(), dimension);
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--danger);padding:16px">Error: ${e.message}</div>`;
+  }
+}
+
+function renderLTVChart(rows, dimension) {
+  const el = document.getElementById('ltv-chart-main');
+  if (!rows || !rows.length) { el.innerHTML = '<div class="loading" style="color:var(--text3)">No data</div>'; return; }
+  el.innerHTML = '';
+  rows = [...rows].sort((a, b) => (b.avg_ltv || 0) - (a.avg_ltv || 0));
+  const values = rows.map(r => r.value);
+  const traces = [
+    { x: values, y: rows.map(r => +(r.avg_ltv   || 0)), type: 'bar', name: 'Avg LTV',   marker: { color: 'rgba(59,130,246,0.7)' }, yaxis: 'y' },
+    { x: values, y: rows.map(r => +(r.avg_arppu  || 0)), type: 'bar', name: 'Avg ARPPU', marker: { color: 'rgba(16,185,129,0.6)' }, yaxis: 'y' },
+    { x: values, y: rows.map(r => r.churn_rate == null ? null : +(r.churn_rate) * 100),
+      type: 'scatter', mode: 'lines+markers', name: 'Churn %',
+      line: { color: '#f87171', width: 2 }, marker: { size: 7 }, yaxis: 'y2' },
+  ];
+  const layout = {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: { color: '#94a3b8', family: 'Inter,sans-serif', size: 12 },
+    title: { text: `LTV & Churn by ${dimension}`, font: { color: '#f1f5f9', size: 14 } },
+    xaxis:  { gridcolor: 'rgba(255,255,255,0.05)', title: dimension, tickangle: -30 },
+    yaxis:  { gridcolor: 'rgba(255,255,255,0.05)', title: 'Amount ($)', tickformat: '.2f' },
+    yaxis2: { title: 'Churn Rate (%)', overlaying: 'y', side: 'right', tickformat: '.1f', showgrid: false, color: '#f87171' },
+    barmode: 'group',
+    legend: { bgcolor: 'transparent', orientation: 'h', y: -0.28, font: { size: 11 } },
+    margin: { t: 42, b: 100, l: 65, r: 65 },
+  };
+  Plotly.newPlot(el, traces, layout, { responsive: true, displayModeBar: false });
+}
+
+// ─── RISK METRICS ─────────────────────────────────────────────────────────────
+let riskLoaded = false;
+let corRowsCache = [];
+let revenueLoaded = false;
+
+async function initRisk() {
+  if (riskLoaded) return;
+  riskLoaded = true;
+  try {
+    const r = await authFetch(API + '/api/risk/mids');
+    if (r.ok) {
+      const mids = await r.json();
+      const sel = document.getElementById('risk-mid-select');
+      mids.forEach(m => {
+        const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o);
+      });
+    }
+  } catch (_) {}
+  await Promise.all([loadRiskTrends(), loadRiskAnomalies()]);
+}
+
+async function initCoR() {
+  if (corLoaded) {
+    loadCoRChart();
+    return;
+  }
+  corLoaded = true;
+  const el = document.getElementById('risk-chart');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span> Loading CoR breakdowns...</div>';
+  try {
+    const r = await authFetch(API + '/api/risk/cor');
+    if (!r.ok) throw new Error(await r.text());
+    const rows = await r.json();
+    corRowsCache = rows;
+    const merchants = [...new Set(rows.map(r => r.merchant_account).filter(Boolean))].sort();
+    const merchantSel = document.getElementById('cor-merchant-select');
+    merchantSel.innerHTML = '<option value="">All accounts</option>' +
+      merchants.map(v => `<option value="${String(v).replace(/"/g, '&quot;')}">${v}</option>`).join('');
+    updateCoRBreakdownOptions();
+    renderCoRChart(rows, '', '');
+  } catch (e) {
+    corLoaded = false;
+    el.innerHTML = `<div style="color:var(--danger);padding:16px">CoR error: ${e.message}</div>`;
+  }
+}
+
+async function initRevenue() {
+  if (revenueLoaded) {
+    loadRevenueChart();
+    return;
+  }
+  revenueLoaded = true;
+  const el = document.getElementById('risk-chart');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span> Loading revenue...</div>';
+  try {
+    const r = await authFetch(API + '/api/risk/revenue');
+    if (!r.ok) throw new Error(await r.text());
+    const rows = await r.json();
+    const mids = [...new Set(rows.map(r => r.mid).filter(Boolean))].sort();
+    const sel = document.getElementById('revenue-mid-select');
+    sel.innerHTML = '<option value="">All MIDs</option>' +
+      mids.map(v => `<option value="${String(v).replace(/"/g, '&quot;')}">${v}</option>`).join('');
+    renderRevenueChart(rows, '', '');
+  } catch (e) {
+    revenueLoaded = false;
+    el.innerHTML = `<div style="color:var(--danger);padding:16px">Revenue error: ${e.message}</div>`;
+  }
+}
+
+async function loadRevenueChart() {
+  const mid = document.getElementById('revenue-mid-select')?.value || '';
+  const eventType = document.getElementById('revenue-event-select')?.value || '';
+  const el = document.getElementById('risk-chart');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span> Computing revenue...</div>';
+  try {
+    const params = new URLSearchParams();
+    if (mid) params.set('mid', mid);
+    if (eventType) params.set('event_type', eventType);
+    const query = params.toString();
+    const url = API + '/api/risk/revenue' + (query ? `?${query}` : '');
+    const r = await authFetch(url);
+    if (!r.ok) throw new Error(await r.text());
+    renderRevenueChart(await r.json(), mid, eventType);
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--danger);padding:16px">Revenue error: ${e.message}</div>`;
+  }
+}
+
+function renderRevenueChart(rows, mid, eventType) {
+  const el = document.getElementById('risk-chart');
+  if (!rows || !rows.length) {
+    el.innerHTML = '<div class="loading" style="color:var(--text3)">No revenue data</div>';
+    return;
+  }
+  el.innerHTML = '';
+
+  const months = [...new Set(rows.map(r => r.month).filter(Boolean))].sort();
+  const groups = [...new Set(rows.map(r => eventType ? r.mid : r.event_type).filter(Boolean))].sort();
+  const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4', '#ec4899', '#84cc16'];
+  const traces = groups.map((group, i) => ({
+    x: months,
+    y: months.map(month => rows
+      .filter(r => r.month === month && (eventType ? r.mid === group : r.event_type === group))
+      .reduce((sum, r) => sum + +(r.revenue_usd || 0), 0)),
+    type: 'bar',
+    name: group,
+    marker: { color: colors[i % colors.length] },
+    hovertemplate: '<b>%{fullData.name}</b><br>%{x}<br>Revenue: $%{y:,.2f}<extra></extra>',
+  }));
+
+  const layout = {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    font: { color: '#94a3b8', family: 'Inter,sans-serif', size: 12 },
+    title: {
+      text: `Revenue${mid ? ' - ' + mid : ''}${eventType ? ' - ' + eventType : ''}`,
+      font: { color: '#f1f5f9', size: 14 },
+    },
+    xaxis: { gridcolor: 'rgba(255,255,255,0.05)', tickangle: -30, automargin: true },
+    yaxis: { gridcolor: 'rgba(255,255,255,0.05)', tickprefix: '$', tickformat: ',.0f', automargin: true },
+    legend: { bgcolor: 'transparent', orientation: 'h', x: 0, y: -0.24, xanchor: 'left', yanchor: 'top', font: { size: 11 } },
+    barmode: 'group',
+    margin: { t: 52, b: 128, l: 76, r: 28 },
+    height: 560,
+    hovermode: 'x unified',
+  };
+  Plotly.newPlot(el, traces, layout, { responsive: true, displayModeBar: false });
+}
+
+function updateCoRBreakdownOptions() {
+  const merchantAccount = document.getElementById('cor-merchant-select')?.value || '';
+  const breakdownSel = document.getElementById('cor-breakdown-select');
+  const rows = merchantAccount
+    ? corRowsCache.filter(r => r.merchant_account === merchantAccount)
+    : corRowsCache;
+  const breakdowns = [...new Set(rows.map(r => r.breakdown_type).filter(Boolean))].sort();
+  breakdownSel.innerHTML = '<option value="">All breakdowns</option>' +
+    breakdowns.map(v => `<option value="${String(v).replace(/"/g, '&quot;')}">${v}</option>`).join('');
+}
+
+function onCoRMerchantChange() {
+  updateCoRBreakdownOptions();
+  loadCoRChart();
+}
+
+async function loadCoRChart() {
+  const merchantAccount = document.getElementById('cor-merchant-select')?.value || '';
+  const breakdownType = document.getElementById('cor-breakdown-select')?.value || '';
+  const el = document.getElementById('risk-chart');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span> Computing CoR...</div>';
+  try {
+    const params = new URLSearchParams();
+    if (merchantAccount) params.set('merchant_account', merchantAccount);
+    if (breakdownType) params.set('breakdown_type', breakdownType);
+    const query = params.toString();
+    const url = API + '/api/risk/cor' + (query ? `?${query}` : '');
+    const r = await authFetch(url);
+    if (!r.ok) throw new Error(await r.text());
+    renderCoRChart(await r.json(), breakdownType, merchantAccount);
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--danger);padding:16px">CoR error: ${e.message}</div>`;
+  }
+}
+
+function renderCoRChart(rows, breakdownType, merchantAccount) {
+  const el = document.getElementById('risk-chart');
+  if (!rows || !rows.length) {
+    el.innerHTML = '<div class="loading" style="color:var(--text3)">No CoR data</div>';
+    return;
+  }
+  el.innerHTML = '';
+
+  const monthLabel = v => String(v).slice(0, 7);
+  const months = [...new Set(rows.map(r => monthLabel(r.month)).filter(Boolean))].sort();
+  const types = [...new Set(rows.map(r => r.breakdown_type).filter(Boolean))].sort();
+  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4', '#ec4899', '#84cc16'];
+
+  const traces = types.map((type, i) => ({
+    x: months,
+    y: months.map(month => rows
+      .filter(r => monthLabel(r.month) === month && r.breakdown_type === type)
+      .reduce((sum, r) => sum + +(r.total_usd || 0), 0)),
+    type: 'bar',
+    name: type,
+    marker: { color: colors[i % colors.length] },
+    hovertemplate: '<b>%{fullData.name}</b><br>%{x}<br>Cost: $%{y:,.2f}<extra></extra>',
+  }));
+
+  const layout = {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    font: { color: '#94a3b8', family: 'Inter,sans-serif', size: 12 },
+    title: {
+      text: `CoR${merchantAccount ? ' - ' + merchantAccount : ''}${breakdownType ? ' - ' + breakdownType : ''}`,
+      font: { color: '#f1f5f9', size: 14 },
+    },
+    xaxis: { gridcolor: 'rgba(255,255,255,0.05)', tickangle: -30, automargin: true },
+    yaxis: { gridcolor: 'rgba(255,255,255,0.05)', tickprefix: '$', tickformat: ',.0f', automargin: true },
+    legend: { bgcolor: 'transparent', orientation: 'h', x: 0, y: -0.24, xanchor: 'left', yanchor: 'top', font: { size: 11 } },
+    barmode: 'stack',
+    margin: { t: 52, b: 128, l: 76, r: 28 },
+    height: 560,
+    hovermode: 'x unified',
+  };
+  Plotly.newPlot(el, traces, layout, { responsive: true, displayModeBar: false });
+}
+
+async function initRatio() {
+  if (ratioLoaded) {
+    loadRatioChart();
+    return;
+  }
+  ratioLoaded = true;
+  const el = document.getElementById('risk-chart');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span> Loading CoR / Revenue...</div>';
+  try {
+    const r = await authFetch(API + '/api/risk/cor-revenue');
+    if (!r.ok) throw new Error(await r.text());
+    const rows = await r.json();
+    const mids = [...new Set(rows.map(r => r.mid).filter(Boolean))].sort();
+    const sel = document.getElementById('ratio-mid-select');
+    sel.innerHTML = '<option value="">All MIDs</option>' +
+      mids.map(v => `<option value="${String(v).replace(/"/g, '&quot;')}">${v}</option>`).join('');
+    renderRatioChart(rows, '', 'Settlement');
+  } catch (e) {
+    ratioLoaded = false;
+    el.innerHTML = `<div style="color:var(--danger);padding:16px">CoR / Revenue error: ${e.message}</div>`;
+  }
+}
+
+async function loadRatioChart() {
+  const mid = document.getElementById('ratio-mid-select')?.value || '';
+  const eventType = document.getElementById('ratio-event-select')?.value || 'Settlement';
+  const el = document.getElementById('risk-chart');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span> Computing CoR / Revenue...</div>';
+  try {
+    const params = new URLSearchParams();
+    if (mid) params.set('mid', mid);
+    if (eventType) params.set('event_type', eventType);
+    const r = await authFetch(API + `/api/risk/cor-revenue?${params.toString()}`);
+    if (!r.ok) throw new Error(await r.text());
+    renderRatioChart(await r.json(), mid, eventType);
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--danger);padding:16px">CoR / Revenue error: ${e.message}</div>`;
+  }
+}
+
+function renderRatioChart(rows, mid, eventType) {
+  const el = document.getElementById('risk-chart');
+  const shouldDropRatioAxis = !mid;
+  if (!rows || !rows.length) {
+    el.innerHTML = '<div class="loading" style="color:var(--text3)">No CoR / Revenue data</div>';
+    return;
+  }
+  el.innerHTML = '';
+
+  const months = [...new Set(rows.map(r => r.month).filter(Boolean))].sort();
+  const mids = [...new Set(rows.map(r => r.mid).filter(Boolean))].sort();
+  const colors = ['#60a5fa', '#10b981', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4', '#ec4899', '#84cc16'];
+  const activeMid = mid || '';
+  const data = activeMid ? rows.filter(r => r.mid === activeMid) : rows;
+
+  const traces = activeMid ? [
+    {
+      x: months,
+      y: months.map(month => {
+        const row = data.find(r => r.month === month);
+        return row ? +(row.revenue_usd || 0) : 0;
+      }),
+      type: 'bar',
+      name: 'Revenue',
+      marker: { color: 'rgba(16,185,129,0.68)' },
+      yaxis: 'y',
+      hovertemplate: 'Revenue: $%{y:,.2f}<extra></extra>',
+    },
+    {
+      x: months,
+      y: months.map(month => {
+        const row = data.find(r => r.month === month);
+        return row ? +(row.cor_usd || 0) : 0;
+      }),
+      type: 'bar',
+      name: 'CoR',
+      marker: { color: 'rgba(239,68,68,0.72)' },
+      yaxis: 'y',
+      hovertemplate: 'CoR: $%{y:,.2f}<extra></extra>',
+    },
+    {
+      x: months,
+      y: months.map(month => {
+        const row = data.find(r => r.month === month);
+        return row ? +(row.cor_revenue_pct || 0) * 100 : null;
+      }),
+      type: 'scatter',
+      mode: 'lines+markers',
+      name: 'CoR / Revenue %',
+      line: { color: '#60a5fa', width: 2 },
+      marker: { size: 7 },
+      yaxis: 'y2',
+      hovertemplate: 'CoR / Revenue: %{y:.2f}%<extra></extra>',
+    },
+  ] : mids.map((item, i) => ({
+    x: months,
+    y: months.map(month => {
+      const row = data.find(r => r.month === month && r.mid === item);
+      return row ? +(row.cor_revenue_pct || 0) * 100 : null;
+    }),
+    type: 'scatter',
+    mode: 'lines+markers',
+    name: item,
+    line: { color: colors[i % colors.length], width: 2 },
+    marker: { size: 7 },
+    hovertemplate: '<b>%{fullData.name}</b><br>%{x}<br>CoR / Revenue: %{y:.2f}%<extra></extra>',
+  }));
+
+  const layout = {
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: 'transparent',
+    font: { color: '#94a3b8', family: 'Inter,sans-serif', size: 12 },
+    title: { text: `CoR / Revenue${activeMid ? ' - ' + activeMid : ''} (${eventType})`, font: { color: '#f1f5f9', size: 14 } },
+    xaxis: { gridcolor: 'rgba(255,255,255,0.05)', tickangle: -30, automargin: true },
+    yaxis: activeMid
+      ? { title: 'Amount ($)', gridcolor: 'rgba(255,255,255,0.05)', tickprefix: '$', tickformat: ',.0f', automargin: true }
+      : { title: 'CoR / Revenue (%)', gridcolor: 'rgba(255,255,255,0.05)', ticksuffix: '%', tickformat: '.2f', automargin: true },
+    yaxis2: activeMid ? { title: 'CoR / Revenue (%)', overlaying: 'y', side: 'right', ticksuffix: '%', tickformat: '.2f', showgrid: false } : undefined,
+    legend: { bgcolor: 'transparent', orientation: 'h', x: 0, y: -0.24, xanchor: 'left', yanchor: 'top', font: { size: 11 } },
+    barmode: 'group',
+    margin: { t: 52, b: 128, l: 76, r: 76 },
+    height: 560,
+    hovermode: 'x unified',
+  };
+  if (shouldDropRatioAxis) delete layout.yaxis2;
+  Plotly.newPlot(el, traces, layout, { responsive: true, displayModeBar: false });
+}
+
+async function loadRiskAnomalies() {
+  try {
+    const r = await authFetch(API + '/api/risk/summary');
+    if (!r.ok) return;
+    const rows = await r.json();
+    // summary chips per MID
+    const chips = document.getElementById('risk-summary-chips');
+    chips.innerHTML = rows.map(row => {
+      const statuses = ['cb_rate_status','fraud_rate_status','vamp_rate_status'];
+      const worst = statuses.some(s => row[s] === 'alert') ? 'alert'
+                  : statuses.some(s => row[s] === 'warn')  ? 'warn' : 'ok';
+      const pct = v => v ? (v * 100).toFixed(2) + '%' : '—';
+      return `<span class="risk-chip ${worst}" title="CB:${pct(row.cb_rate)} Fraud:${pct(row.fraud_rate)} VAMP:${pct(row.vamp_rate)}">
+        <span class="dot" style="background:currentColor"></span>${row.mid || '—'}
+      </span>`;
+    }).join('');
+    // anomaly banner
+    const alerts = rows.filter(r =>
+      ['cb_rate_status','fraud_rate_status','vamp_rate_status'].some(s => r[s] === 'alert')
+    );
+    const banner = document.getElementById('risk-anomaly-banner');
+    if (alerts.length) {
+      banner.className = 'alert-banner show';
+      banner.innerHTML = `⚠ ${alerts.length} MID${alerts.length > 1 ? 's' : ''} exceed alert thresholds: `
+        + alerts.map(a => `<b>${a.mid}</b>`).join(', ');
+    } else {
+      banner.className = 'alert-banner';
+    }
+  } catch (e) { console.warn('risk summary', e); }
+}
+
+async function loadRiskTrends() {
+  const mid = document.getElementById('risk-mid-select').value;
+
+  const el = document.getElementById('risk-chart');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span> Computing risk metrics…</div>';
+  try {
+    const url = API + '/api/risk/trends' + (mid ? `?mid=${encodeURIComponent(mid)}` : '');
+    const r = await authFetch(url);
+    if (!r.ok) throw new Error(await r.text());
+    renderRiskChart(await r.json(), mid);
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--danger);padding:16px">Error: ${e.message}</div>`;
+  }
+}
+
+function renderRiskChart(rows, midLabel) {
+  const el = document.getElementById('risk-chart');
+  if (!rows || !rows.length) {
+    el.innerHTML = '<div class="loading" style="color:var(--text3)">No data</div>'; return;
+  }
+  el.innerHTML = '';
+  el._plotlyData = { rows, mid: midLabel };
+
+  const filter = riskMetricFilter || 'all';
+  const showCB    = filter === 'all' || filter === 'cb';
+  const showFraud = filter === 'all' || filter === 'fraud';
+  const showVamp  = filter === 'all' || filter === 'vamp';
+
+  // Group by MID to create one trace-set per MID
+  const mids = [...new Set(rows.map(r => r.mid))];
+  const months = [...new Set(rows.map(r => r.month))].sort();
+  const monthLabels = months.map(m => {
+    const [y, mo] = m.split('-');
+    return new Date(+y, +mo - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  });
+
+  const COLORS = ['rgba(59,130,246,0.75)','rgba(16,185,129,0.75)','rgba(245,158,11,0.75)',
+                  'rgba(168,85,247,0.75)','rgba(236,72,153,0.75)','rgba(6,182,212,0.75)'];
+
+  const getVals = (mid, metric) =>
+    months.map(m => { const row = rows.find(r => r.mid === mid && r.month === m); return row ? +(row[metric] || 0) * 100 : null; });
+
+  const traces = [];
+  // Build panels based on active filter
+  const panels = [];
+  if (showCB)    panels.push({ metric: 'cb_rate',    label: 'Chargeback Rate (%)', threshold: 0.9 });
+  if (showFraud) panels.push({ metric: 'fraud_rate', label: 'Fraud Rate (%)',      threshold: 2.0 });
+  if (showVamp)  panels.push({ metric: 'vamp_rate',  label: 'VAMP Rate (%)',       threshold: 0.9 });
+
+  const n = panels.length;
+  const gap = 0.06;
+  const panelH = (1 - gap * (n - 1)) / n;
+  const domains = panels.map((_, i) => {
+    const top = 1 - i * (panelH + gap);
+    return [+(top - panelH).toFixed(3), +top.toFixed(3)];
+  });
+
+  const xRef = i => i === 0 ? 'x' : `x${i + 1}`;
+  const yRef = i => i === 0 ? 'y' : `y${i + 1}`;
+
+  mids.forEach((mid, i) => {
+    const color = COLORS[i % COLORS.length];
+    panels.forEach((p, pi) => {
+      traces.push({
+        x: monthLabels, y: getVals(mid, p.metric), name: mid,
+        type: 'bar', xaxis: xRef(pi), yaxis: yRef(pi),
+        marker: { color },
+        legendgroup: mid, showlegend: pi === 0,
+        hovertemplate: `<b>${mid}</b><br>${p.label}: %{y:.3f}%<extra></extra>`,
+      });
+    });
+  });
+
+  // Threshold lines
+  panels.forEach((p, pi) => {
+    traces.push({
+      x: [monthLabels[0], monthLabels[monthLabels.length - 1]], y: [p.threshold, p.threshold],
+      type: 'scatter', mode: 'lines',
+      xaxis: xRef(pi), yaxis: yRef(pi),
+      line: { color: '#ef4444', dash: 'dot', width: 1.2 },
+      showlegend: false, hoverinfo: 'skip',
+    });
+  });
+
+  const axis = (label, domain, anchorX) => ({
+    domain, title: { text: label, font: { size: 11 } },
+    tickformat: '.2f', ticksuffix: '%',
+    gridcolor: 'rgba(255,255,255,0.05)', linecolor: 'rgba(255,255,255,0.07)',
+    font: { color: '#94a3b8', size: 11 },
+    anchor: anchorX,
+  });
+
+  const layout = {
+    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+    font: { color: '#94a3b8', family: 'Inter,sans-serif', size: 11 },
+    title: { text: `Risk Metrics${midLabel ? ' — ' + midLabel : ''}`, font: { color: '#f1f5f9', size: 14 } },
+    barmode: 'group',
+    legend: { bgcolor: 'transparent', orientation: 'h', y: -0.22, font: { size: 11 } },
+    margin: { t: 42, b: 130, l: 65, r: 20 },
+    height: n === 1 ? 320 : n === 2 ? 480 : 600,
+  };
+
+  panels.forEach((p, pi) => {
+    const axKey = pi === 0 ? 'yaxis' : `yaxis${pi + 1}`;
+    const xKey  = pi === 0 ? 'xaxis' : `xaxis${pi + 1}`;
+    const isBottom = pi === n - 1;
+    layout[axKey] = axis(p.label, domains[pi], xRef(pi));
+    layout[xKey]  = {
+      anchor: yRef(pi),
+      type: 'category',
+      tickangle: -40,
+      showticklabels: isBottom,
+      tickfont: { size: 12, color: '#cbd5e1' },
+      tickcolor: '#475569',
+      gridcolor: 'rgba(255,255,255,0.04)',
+      linecolor: 'rgba(255,255,255,0.07)',
+      automargin: true,
+    };
+  });
+
+  Plotly.newPlot(el, traces, layout, { responsive: true, displayModeBar: false });
+}
+
+// ─── RISK CHAT ─────────────────────────────────────────────────────────────────
+let riskChatHistory = [];
+let riskChatInitialized = false;
+
+const RISK_CHAT_SUGGESTIONS = [
+  'What are the current risk alerts?',
+  'Show CB rate trends for all MIDs',
+  'Which MID has the highest chargeback rate?',
+  'How can we reduce our VAMP rate?',
+  'Show fraud rate chart for the past 6 months',
+];
+
+const COR_CHAT_SUGGESTIONS = [
+  'Show Cost of Revenue by month for adyen us',
+  'Compare CoR between adyen uae and adyen us',
+  'Which CoR breakdown is the largest this month?',
+  'Show processing fees and scheme fees trend',
+  'What changed in CoR over the last 3 months?',
+];
+
+const REVENUE_CHAT_SUGGESTIONS = [
+  'Show monthly revenue by MID',
+  'Compare revenue for adyen us and checkout',
+  'How much revenue came through Settlement dates?',
+  'Show revenue by Authorization vs Lifecycle Settled',
+  'Which MID generated the most revenue this month?',
+];
+
+const RATIO_CHAT_SUGGESTIONS = [
+  'Show CoR / Revenue trend for checkout',
+  'Compare CoR / Revenue for adyen us and adyen uae',
+  'Which MID has the highest cost ratio this month?',
+  'Why did CoR / Revenue change over the last 3 months?',
+  'Show revenue and CoR together for adyen us',
+];
+
+function renderRiskSuggestions() {
+  const panel = document.getElementById('risk-suggestions');
+  if (panel) {
+    const suggestions =
+      paymentView === 'cor' ? COR_CHAT_SUGGESTIONS :
+      paymentView === 'revenue' ? REVENUE_CHAT_SUGGESTIONS :
+      paymentView === 'ratio' ? RATIO_CHAT_SUGGESTIONS :
+      RISK_CHAT_SUGGESTIONS;
+    panel.innerHTML = suggestions
+      .map(q => `<div class="suggestion" onclick="useRiskSuggestion(this)">${q}</div>`)
+      .join('');
+  }
+}
+
+function initRiskChat() {
+  renderRiskSuggestions();
+  if (!riskChatInitialized) {
+    riskChatInitialized = true;
+    if (paymentView === 'cor') {
+      sendRiskChat('Analyze current Cost of Revenue for adyen uae and adyen us. Identify the biggest breakdowns and changes.');
+    } else if (paymentView === 'revenue') {
+      sendRiskChat('Analyze current revenue by MID and event date type. Highlight the biggest contributors and recent changes.');
+    } else if (paymentView === 'ratio') {
+      sendRiskChat('Analyze CoR as a share of revenue by MID. Identify which MID has the highest cost ratio and why it may be moving.');
+    } else {
+      sendRiskChat('Analyze the current risk metrics and identify any concerns or anomalies. Provide concrete recommendations.');
+    }
+  }
+}
+
+function useRiskSuggestion(el) {
+  document.getElementById('risk-chat-input').value = el.textContent;
+  sendRiskChat();
+}
+
+function handleRiskKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendRiskChat(); }
+}
+
+function appendRiskMsg(role, text) {
+  const div = appendMsgDetached(role, text);
+  document.getElementById('risk-chat-msgs').appendChild(div);
+  scrollRiskBottom();
+  return div;
+}
+
+function scrollRiskBottom() {
+  const m = document.getElementById('risk-chat-msgs');
+  if (m) m.scrollTop = m.scrollHeight;
+}
+
+async function sendRiskChat(autoText) {
+  const input = document.getElementById('risk-chat-input');
+  const text = autoText || (input ? input.value.trim() : '');
+  if (!text) return;
+  if (input && !autoText) input.value = '';
+  const sendBtn = document.getElementById('risk-send-btn');
+  if (sendBtn) sendBtn.disabled = true;
+
+  riskChatHistory.push({ role: 'user', content: text });
+  const userEl = appendRiskMsg('user', text);
+  if (autoText) userEl.style.opacity = '0.55';
+
+  const typingEl = document.createElement('div');
+  typingEl.className = 'typing';
+  typingEl.innerHTML = '<span class="spinner"></span> Analyzing…';
+  document.getElementById('risk-chat-msgs').appendChild(typingEl);
+  scrollRiskBottom();
+
+  let assistantText = '';
+  try {
+    const resp = await fetch(API + '/api/risk/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ messages: riskChatHistory }),
+    });
+    if (!resp.ok) {
+      let detail = ''; try { detail = (await resp.json()).detail ?? ''; } catch (_) { try { detail = await resp.text(); } catch (_) {} }
+      throw new Error(detail || `HTTP ${resp.status}`);
+    }
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (!raw || raw === '[DONE]') continue;
+        let evt; try { evt = JSON.parse(raw); } catch { continue; }
+        if (evt.type === 'text_delta') {
+          assistantText += evt.data;
+        } else if (evt.type === 'tool_start') {
+          const toolDiv = appendMsgDetached('tool', `🔧 ${evt.data?.tool ?? evt.data}…`);
+          typingEl.before(toolDiv);
+          scrollRiskBottom();
+        } else if (evt.type === 'tool_result') {
+          const toolName = evt.data?.tool ?? '';
+          const result = evt.data?.result;
+          const lastTools = document.getElementById('risk-chat-msgs').querySelectorAll('.msg.tool');
+          if (lastTools.length) lastTools[lastTools.length - 1].querySelector('.msg-body').textContent = `✅ ${toolName}`;
+          if (result && result.plotly_traces) {
+            const c = document.createElement('div');
+            c.className = 'plotly-embed risk-plotly';
+            typingEl.before(c);
+            const layout = normalizePlotLayout(result.plotly_layout || {}, { kind: 'risk' });
+            Plotly.newPlot(c, result.plotly_traces, layout, { responsive: true, displayModeBar: false });
+            scrollRiskBottom();
+          }
+        } else if (evt.type === 'done') {
+          typingEl.remove();
+          if (assistantText) {
+            riskChatHistory.push({ role: 'assistant', content: assistantText });
+            const assistantEl = appendRiskMsg('assistant', '');
+            const b = assistantEl.querySelector('.msg-body');
+            renderMarkdownWithMath(assistantText, b);
+          }
+          scrollRiskBottom();
+        } else if (evt.type === 'error') {
+          typingEl.remove();
+          appendRiskMsg('tool', `❌ Error: ${evt.data?.message ?? evt.data}`);
+        }
+      }
+    }
+  } catch (e) {
+    typingEl.remove();
+    appendRiskMsg('tool', `❌ ${e.message}`);
+  }
+  if (sendBtn) sendBtn.disabled = false;
+  scrollRiskBottom();
+}
+
+// ─── MARKETING CHAT ────────────────────────────────────────────────────────────
+let marketingChatHistory = [];
+let marketingChatInitialized = false;
+
+const MARKETING_SUGGESTIONS = [
+  'Which channel has the best ROI?',
+  'Compare CAC across all sources',
+  'Show ROI chart for all channels',
+  'Which source should get more budget?',
+  'What is the overall marketing efficiency?',
+];
+
+function initMarketingChat() {
+  const panel = document.getElementById('marketing-suggestions');
+  if (panel) {
+    panel.innerHTML = MARKETING_SUGGESTIONS
+      .map(q => `<div class="suggestion" onclick="useMarketingSuggestion(this)">${q}</div>`)
+      .join('');
+  }
+  if (!marketingChatInitialized) {
+    marketingChatInitialized = true;
+    sendMarketingChat('Analyze the current marketing ROI data across all channels. Identify top performers and channels with poor efficiency. Give concrete budget recommendations.');
+  }
+}
+
+function useMarketingSuggestion(el) {
+  document.getElementById('marketing-chat-input').value = el.textContent;
+  sendMarketingChat();
+}
+
+function handleMarketingKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMarketingChat(); }
+}
+
+function appendMarketingMsg(role, text) {
+  const div = appendMsgDetached(role, text);
+  document.getElementById('marketing-chat-msgs').appendChild(div);
+  scrollMarketingBottom();
+  return div;
+}
+
+function scrollMarketingBottom() {
+  const m = document.getElementById('marketing-chat-msgs');
+  if (m) m.scrollTop = m.scrollHeight;
+}
+
+async function sendMarketingChat(autoText) {
+  const input = document.getElementById('marketing-chat-input');
+  const text = autoText || (input ? input.value.trim() : '');
+  if (!text) return;
+  if (input && !autoText) input.value = '';
+  const sendBtn = document.getElementById('marketing-send-btn');
+  if (sendBtn) sendBtn.disabled = true;
+
+  marketingChatHistory.push({ role: 'user', content: text });
+  const userEl = appendMarketingMsg('user', text);
+  if (autoText) userEl.style.opacity = '0.55';
+
+  const typingEl = document.createElement('div');
+  typingEl.className = 'typing';
+  typingEl.innerHTML = '<span class="spinner"></span> Analyzing…';
+  document.getElementById('marketing-chat-msgs').appendChild(typingEl);
+  scrollMarketingBottom();
+
+  let assistantText = '';
+  try {
+    const resp = await fetch(API + '/api/marketing/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ messages: marketingChatHistory }),
+    });
+    if (!resp.ok) {
+      let detail = ''; try { detail = (await resp.json()).detail ?? ''; } catch (_) { try { detail = await resp.text(); } catch (_) {} }
+      throw new Error(detail || `HTTP ${resp.status}`);
+    }
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (!raw || raw === '[DONE]') continue;
+        let evt; try { evt = JSON.parse(raw); } catch { continue; }
+        if (evt.type === 'text_delta') {
+          assistantText += evt.data;
+        } else if (evt.type === 'tool_start') {
+          const toolDiv = appendMsgDetached('tool', `🔧 ${evt.data?.tool ?? evt.data}…`);
+          typingEl.before(toolDiv);
+          scrollMarketingBottom();
+        } else if (evt.type === 'tool_result') {
+          const toolName = evt.data?.tool ?? '';
+          const result = evt.data?.result;
+          const lastTools = document.getElementById('marketing-chat-msgs').querySelectorAll('.msg.tool');
+          if (lastTools.length) lastTools[lastTools.length - 1].querySelector('.msg-body').textContent = `✅ ${toolName}`;
+          if (result && result.plotly_traces) {
+            const c = document.createElement('div');
+            c.className = 'plotly-embed'; c.style.height = '340px';
+            typingEl.before(c);
+            const layout = { ...(result.plotly_layout || {}), paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', font: { color: '#94a3b8', family: 'Inter,sans-serif', size: 11 } };
+            Plotly.newPlot(c, result.plotly_traces, layout, { responsive: true, displayModeBar: false });
+            scrollMarketingBottom();
+          }
+        } else if (evt.type === 'done') {
+          typingEl.remove();
+          if (assistantText) {
+            marketingChatHistory.push({ role: 'assistant', content: assistantText });
+            const assistantEl = appendMarketingMsg('assistant', '');
+            renderMarkdownWithMath(assistantText, assistantEl.querySelector('.msg-body'));
+          }
+          scrollMarketingBottom();
+        } else if (evt.type === 'error') {
+          typingEl.remove();
+          appendMarketingMsg('tool', `❌ Error: ${evt.data?.message ?? evt.data}`);
+        }
+      }
+    }
+  } catch (e) {
+    typingEl.remove();
+    appendMarketingMsg('tool', `❌ ${e.message}`);
+  }
+  if (sendBtn) sendBtn.disabled = false;
+  scrollMarketingBottom();
+}
+</script>
+</body>
+</html>

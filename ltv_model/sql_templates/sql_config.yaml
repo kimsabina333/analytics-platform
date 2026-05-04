@@ -1,0 +1,30 @@
+# Константы для маппинга
+mappings:
+  t1_countries: ["AE", "AT", "AU", "BH", "BN", "CA", "CZ", "DE", "DK", "ES", "FI", "FR",
+                "GB", "HK", "IE", "IL", "IT", "JP", "KR", "NL", "NO", "PT", "QA", "SA",
+                "SE", "SG", "SI", "US", "NZ"]
+  offers:
+    '1Week': ['2', '12', '15', '18', '21', '24', '27', '30']
+    '4Week': ['3', '13', '16', '19', '22', '25', '28', '31']
+    '12Week': ['4', '14', '17', '20', '23', '26', '29', '32']
+    '1Month': ['33']
+    '3Month': ['34']             
+    '1Year': ['35']      
+  channels: ['solidgate','checkout', 'adyen', 'primer']
+  utm_sources:
+    'facebook': ['facebook', 'fb_page', 'fb_bio', 'fb_post']
+    'google': ['google']
+    'tiktok': ['TikTok', 'tiktok']
+    'adq': ['unionapps'] 
+  devices:
+    'Android': 'Android'
+    'iOS': '(iPhone|iPad|iPod)'
+    'Windows': 'Windows NT'
+    'Mac': 'Macintosh'
+    'Linux': 'Linux'
+    'X11': 'X11'
+  mid:
+    'adyen US': ['d4d7b345-bf19-453a-acdc-8ea68a5d4c44','01KMFGBBWW8RDNQJV20QPM8MMN']
+    'esquire': ['ed141bc8-5fe6-40bd-b501-9d9d3c678689', 'de185c91-6045-4190-babc-42558400cb92', '01KMFGBN6Y4ZYG1595Q39ATB5N']
+  card_brand: ['mastercard', 'visa', 'amex', 'maestro', 'discover']
+  allowed_subs: ['1Week', '4Week', '12Week']

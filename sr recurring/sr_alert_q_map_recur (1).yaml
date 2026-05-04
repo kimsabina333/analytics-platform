@@ -1,0 +1,40 @@
+mid=adyen: 0.05
+mid=adyen US: 0.01
+mid=adyen US&card_brand=mastercard: 0.01
+mid=adyen US&card_brand=visa: 0.01
+mid=adyen US&offer=12Week: 0.05
+mid=adyen US&offer=1Week: 0.01
+mid=adyen US&offer=4Week: 0.01
+mid=adyen US&payment_method=applepay: 0.01
+mid=adyen US&payment_method=card: 0.01
+mid=adyen&card_brand=mastercard: 0.05
+mid=adyen&card_brand=visa: 0.01
+mid=adyen&offer=12Week: 0.05
+mid=adyen&offer=1Week: 0.01
+mid=adyen&offer=4Week: 0.01
+mid=adyen&payment_method=applepay: 0.05
+mid=adyen&payment_method=card: 0.01
+mid=adyen_us: 0.05
+mid=adyen_us&card_brand=mastercard: 0.01
+mid=adyen_us&card_brand=visa: 0.05
+mid=adyen_us&offer=12Week: 0.1
+mid=adyen_us&offer=1Week: 0.01
+mid=adyen_us&offer=4Week: 0.05
+mid=adyen_us&payment_method=applepay: 0.05
+mid=adyen_us&payment_method=card: 0.05
+mid=checkout: 0.05
+mid=checkout&card_brand=mastercard: 0.05
+mid=checkout&card_brand=visa: 0.05
+mid=checkout&offer=12Week: 0.05
+mid=checkout&offer=1Week: 0.01
+mid=checkout&offer=4Week: 0.01
+mid=checkout&payment_method=applepay: 0.05
+mid=checkout&payment_method=card: 0.01
+offer=12Week: 0.1
+offer=1Week: 0.01
+offer=4Week: 0.05
+utm_source=adq: 0.01
+utm_source=facebook: 0.05
+utm_source=google: 0.05
+utm_source=other: 0.01
+utm_source=tiktok: 0.1

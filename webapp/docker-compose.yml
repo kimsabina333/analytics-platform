@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ..
+      dockerfile: webapp/backend/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp_key.json
+      REDIS_URL: redis://redis:6379/0
+      CACHE_TTL_SECONDS: 300
+      POLL_INTERVAL_SECONDS: 180
+    secrets:
+      - gcp_key
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - /tmp/arviz_cache:/tmp/arviz_cache
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: webapp/frontend/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  redis_data:
+
+secrets:
+  gcp_key:
+    file: ./secrets/gcp_service_account.json

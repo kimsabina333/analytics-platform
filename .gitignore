@@ -1,0 +1,30 @@
+# Secrets — NEVER commit
+sa*.json
+*service_account*.json
+webapp/secrets/
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# SQLite databases
+*.db
+
+# Logs
+*.log
+*.err.log
+*.out.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Runtime cache
+.runtime_cache/
+webapp/backend/.runtime_cache/

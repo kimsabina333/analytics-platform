@@ -950,12 +950,7 @@ header {
           <div class="alert-banner" id="alert-banner"></div>
           <div id="sr-section">
             <div class="dash-controls">
-              <label>Date range:</label>
-              <button class="range-btn" onclick="setRange(7,this)">7d</button>
-              <button class="range-btn" onclick="setRange(14,this)">14d</button>
-              <button class="range-btn active" onclick="setRange(30,this)">30d</button>
-              <button class="range-btn" onclick="setRange(null,this)">All</button>
-              <span id="range-label" style="font-size:12px;color:var(--text3);margin-left:6px;"></span>
+              <span id="range-label" style="font-size:12px;color:var(--text3);"></span>
             </div>
             <div class="grid" id="overview-grid">
               <div class="loading"><span class="spinner"></span> Loading segments…</div>
@@ -1571,7 +1566,7 @@ function setModel(model, opts = {}) {
 }
 
 // ─── DASHBOARD ────────────────────────────────────────────────────────────────
-let overviewData = [], selectedSeg = null, dateRange = 30;
+let overviewData = [], selectedSeg = null, dateRange = null;
 
 async function loadOverview() {
   document.getElementById('overview-grid').innerHTML = '<div class="loading"><span class="spinner"></span> Loading segments…</div>';

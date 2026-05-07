@@ -401,7 +401,7 @@ class RiskService:
                 return self._cache
             loop = asyncio.get_event_loop()
             raw = await loop.run_in_executor(
-                None, lambda: self.bq_client.query(_RISK_SQL).to_dataframe()
+                None, lambda: pd.DataFrame([dict(r) for r in self.bq_client.query(_RISK_SQL).result()])
             )
             self._df_to_persistent_cache("risk:metrics:v1", raw)
             self._cache = _compute_rates(raw)
@@ -456,7 +456,7 @@ class RiskService:
                 return self._cor_cache
             loop = asyncio.get_event_loop()
             raw = await loop.run_in_executor(
-                None, lambda: self.bq_client.query(_COR_SQL).to_dataframe()
+                None, lambda: pd.DataFrame([dict(r) for r in self.bq_client.query(_COR_SQL).result()])
             )
             raw["month"] = pd.to_datetime(raw["month"]).dt.strftime("%Y-%m")
             self._df_to_persistent_cache("risk:cor:v1", raw)
@@ -496,7 +496,7 @@ class RiskService:
                 return self._revenue_cache
             loop = asyncio.get_event_loop()
             raw = await loop.run_in_executor(
-                None, lambda: self.bq_client.query(_REVENUE_SQL).to_dataframe()
+                None, lambda: pd.DataFrame([dict(r) for r in self.bq_client.query(_REVENUE_SQL).result()])
             )
             raw["month"] = pd.to_datetime(raw["month"]).dt.strftime("%Y-%m")
             self._df_to_persistent_cache("risk:revenue:v1", raw)

@@ -47,7 +47,8 @@ class LTVService:
         FROM `{TABLE}`
         WHERE ltv IS NOT NULL AND arppu IS NOT NULL
         """
-        return self.bq_client.query(sql).to_dataframe()
+        rows = self.bq_client.query(sql).result()
+        return pd.DataFrame([dict(row) for row in rows])
 
     async def get_overview(self) -> dict:
         df = await self.get_data()

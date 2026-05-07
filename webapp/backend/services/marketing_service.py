@@ -394,7 +394,7 @@ class MarketingService:
                 return self._roi_cache
             loop = asyncio.get_event_loop()
             raw = await loop.run_in_executor(
-                None, lambda: self.bq_client.query(ROI_SQL).to_dataframe()
+                None, lambda: pd.DataFrame([dict(r) for r in self.bq_client.query(ROI_SQL).result()])
             )
             raw["date"] = pd.to_datetime(raw["date"]).dt.strftime("%Y-%m-%d")
             self._cache_set_df("marketing:roi:v1", raw)

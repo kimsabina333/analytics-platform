@@ -163,7 +163,7 @@ class PredictionService:
                 X_enc = self.model.encode(daily)
                 cnt_arr = np.array(daily["cnt"])
                 pred = await self.model.predict(cnt_arr, X_enc)
-                samples.append(pred)
+                samples.append(pred[::8])  # thin 4000→500 samples to reduce RAM
 
             self._data_cache = (date_max_str, data, dates, samples)
 
